@@ -1,0 +1,10 @@
+venv/
+.env
+.dev.env
+trunk/
+__pycache__/
+.vscode/
+eckodriver.log
+.pytest_cache/
+*.pkl
+*.db
