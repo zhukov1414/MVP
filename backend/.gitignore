@@ -1,10 +1,13 @@
+# db
+db.sqlite3
+
+# precompiled
+__pycache__/
+
+# Environment
 venv/
 .env
-.dev.env
-trunk/
-__pycache__/
+
+# IDE conf
 .vscode/
-eckodriver.log
-.pytest_cache/
-*.pkl
-*.db
+.idea/
