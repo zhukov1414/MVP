@@ -63,13 +63,13 @@ class Task(BaseTaskModel):
 
     class Meta:
         verbose_name = 'Задача'
-        verbose_name_plural = 'Задачи'        
+        verbose_name_plural = 'Задачи'
 
     def __str__(self):
         return self.title
 
 
-class Comment(models.Model):  # добавила автора и задачу
+class Comment(models.Model):
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name='comments')
     task = models.ForeignKey(
