@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework',
     'api',
+    'employee',
+    'ipr',
+    'templatestask',
+
 ]
 
 MIDDLEWARE = [
