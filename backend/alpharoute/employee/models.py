@@ -4,8 +4,11 @@ from django.db import models
 
 class CustomUser(AbstractUser):
 
+    name = models.CharField('Имя', max_length=150)
+    first_name = models.CharField('Отчество', max_length=150)
+    last_name = models.CharField('Фамилия', max_length=150)
     position = models.CharField(max_length=150)
-    password = models.CharField(max_length=50)
+    password = models.CharField(max_length=150)
 
     class Meta:
         verbose_name = 'сотрудник',
@@ -13,4 +16,4 @@ class CustomUser(AbstractUser):
         ordering = ['id']
 
     def __str__(self):
-        return f'{self.username} - {self.position}'
+        return f'{self.name} - {self.position}'
