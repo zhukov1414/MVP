@@ -1,5 +1,5 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-
+from rest_framework import serializers
 from employee.models import CustomUser
 
 
@@ -19,3 +19,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = CustomUser
         fields = ('id', 'username',
                   'first_name', 'last_name', 'password', )
+
+
+class CustomUserListSerializer(serializers.ModelSerializer):
+    """Сериализация списка пользователей."""
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'first_name', 'last_name', 'position',)
+        read_only_fields = ('username', 'first_name', 'last_name', 'position',)

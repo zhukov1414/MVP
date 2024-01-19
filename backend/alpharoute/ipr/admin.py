@@ -15,12 +15,6 @@ class IndividualDevelopmentPlanAdmin(admin.ModelAdmin):
     inlines = [TaskInline, ]
 
 
-class StatusAdmin(admin.ModelAdmin):
-
-    list_display = ('id', 'name',)
-    empty_value_display = '-пусто-'
-
-
 class TaskAdmin(admin.ModelAdmin):
 
     list_display = ('title', 'ipr', 'deadline', 'status')
@@ -35,7 +29,5 @@ class CommentAdmin(admin.ModelAdmin):
 
 admin.site.register(models.IndividualDevelopmentPlan,
                     IndividualDevelopmentPlanAdmin)
-
-admin.site.register(models.Status, StatusAdmin)
 admin.site.register(models.Comment, CommentAdmin)
 admin.site.register(models.Task, TaskAdmin)
