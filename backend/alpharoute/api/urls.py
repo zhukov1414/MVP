@@ -1,13 +1,16 @@
 from django.urls import include, path
-
-from .views import CustomUserViewSet, IndividualDevelopmentPlanViewSet
-
 from rest_framework.routers import DefaultRouter
 
+from .views import (CommentViewSet, CustomUserViewSet,
+                    IndividualDevelopmentPlanViewSet, TaskViewSet)
+
+app_name = 'api'
 router_v1 = DefaultRouter()
 
-router_v1.register('employee', CustomUserViewSet, basename='employee')
-router_v1.register('employee/individual-development-plan', IndividualDevelopmentPlanViewSet, basename='ipr')
+router_v1.register('users', CustomUserViewSet, basename='employee')
+router_v1.register('ipr', IndividualDevelopmentPlanViewSet, basename='ipr')
+router_v1.register('task', TaskViewSet, basename='task')
+router_v1.register('comment', CommentViewSet, basename='comment')
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),

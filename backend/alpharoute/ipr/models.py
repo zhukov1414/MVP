@@ -7,17 +7,32 @@ from employee.models import CustomUser as Employee
 
 
 STATUS = [
-        (0, 'Выполнен'),
-        (1, 'Не выполнен'),
-        (2, 'В работе'),
-        (3, 'Отсутствует'),
-        (4, 'Отменен'),
+        (0, 'открыт'),
+        (1, 'в работе'),
+        (2, 'выполнен'),
+        (3, 'отменен'),
     ]
+
+
+class IndividualDevelopmentPlan(models.Model):
+
+    title = models.CharField(max_length=255,)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    goal = models.CharField(max_length=255)
+    description = models.TextField()
+    deadline = models.DateField()
+    status = models.PositiveSmallIntegerField(_('status'), choices=STATUS,)
+
+    class Meta:
+        verbose_name = 'Индивиуальный план развития'
+        verbose_name_plural = 'Планы развития'
+
+    def __str__(self):
+        return self.title
 
 
 class BaseTaskModel(models.Model):
     """Абстрактная модель для задач и шаблонов"""
-
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     linkURL = models.CharField(max_length=255,
@@ -28,6 +43,9 @@ class BaseTaskModel(models.Model):
 
 
 class Task(BaseTaskModel):
+    ipr = models.ForeignKey(
+        IndividualDevelopmentPlan,
+        on_delete=models.CASCADE, related_name='task')
     deadline = models.DateField(null=True, blank=True)
     status = models.PositiveSmallIntegerField(_('status'), choices=STATUS)
 
@@ -56,26 +74,3 @@ class Comment(models.Model):
         super().save(*args, **kwargs)
         self.postdate = datetime.datetime.now()
         super().save(*args, **kwargs)
-
-
-class IndividualDevelopmentPlan(models.Model):
-    """Модель индивидуального плана развития"""
-
-    title = models.CharField(max_length=255,
-                             verbose_name = 'Название ИПР',)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE,
-                                 verbose_name = 'Сотрудник',)
-    goal = models.CharField(max_length=255,
-                            verbose_name = 'Цель',)
-    description = models.TextField(verbose_name = 'Описание',)
-    deadline = models.DateField(verbose_name = 'Дата',)
-    task = models.ManyToManyField(Task,
-                                  related_name = 'task',
-                                  verbose_name='Задачи')
-
-    class Meta:
-        verbose_name = 'Индивиуальный план развития'
-        verbose_name_plural = 'Планы развития'
-
-    def __str__(self):
-        return f'{self.title} - {self.employee}'
