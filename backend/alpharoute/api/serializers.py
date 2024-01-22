@@ -2,7 +2,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from employee.models import CustomUser
-from ipr.models import IndividualDevelopmentPlan
+from templatestask.models import Department, Template
 
 
 class CustomUserSerializer(UserSerializer):
@@ -33,40 +33,18 @@ class CustomUserListSerializer(serializers.ModelSerializer):
                             'last_name', 'position',)
 
 
-class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания ИПР."""
-
-    employee = CustomUserSerializer(read_only=True)
-    title = serializers.CharField(max_length=255,)
-    goal = serializers.CharField(max_length=255,)
-    deadline = serializers.DateField()
+class DepartmentSerializer(serializers.ModelSerializer):
+    """Сериализация направления для шаблона."""
 
     class Meta:
-        model = IndividualDevelopmentPlan
-        fields = ('id',
-                  'employee',
-                  'title',
-                  'goal',
-                  'description',
-                  'deadline',
-                  )
+        model = Department
+        fields = ('id', 'title')
 
 
-class IndividualDevelopmentPlanShortSerializer(IndividualDevelopmentPlanCreateSerializer):
-    """Сериализатор для получения созданного ИПР."""
-
-    employee = CustomUserSerializer(read_only=True)
-    title = serializers.CharField(max_length=255,)
-    goal = serializers.CharField(max_length=255,)
-    deadline = serializers.DateField()
+class TemplateSerializer(serializers.ModelSerializer):
+    """Сериализация для создания шаблона."""
 
     class Meta:
-        model = IndividualDevelopmentPlan
-        fields = ('id',
-                  'employee',
-                  'title',
-                  'goal',
-                  'description',
-                  'deadline',
-                  'task',
-                  )
+        model = Template
+        fields = ('id', 'title', 'description', 'linkURL', 'department')
+        # шаблон привязан к направлению?

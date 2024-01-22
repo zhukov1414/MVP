@@ -1,11 +1,10 @@
-from employee.models import CustomUser
-from ipr.models import IndividualDevelopmentPlan
-from .serializers import (CustomUserListSerializer,
-                          IndividualDevelopmentPlanCreateSerializer,
-                          IndividualDevelopmentPlanShortSerializer,
-                          )
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+
+from employee.models import CustomUser
+from templatestask.models import Template
+
+from .serializers import CustomUserListSerializer, TemplateSerializer
 
 
 class CustomUserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -13,15 +12,6 @@ class CustomUserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CustomUserListSerializer
 
 
-class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
-    """ВьюСет для создания ИПР."""
-
-    queryset = IndividualDevelopmentPlan.objects.all()
-    serializer_class = IndividualDevelopmentPlanCreateSerializer
-    #pagination_class = LimitPagePagination
-    permission_classes = (AllowAny,)
-
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return IndividualDevelopmentPlanShortSerializer
-        return IndividualDevelopmentPlanCreateSerializer
+class TemplateViewSet(viewsets.ModelViewSet):
+    queryset = Template.objects.all()
+    serializer_class = TemplateSerializer

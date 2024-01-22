@@ -1,10 +1,9 @@
+import datetime
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-import datetime
-
 from employee.models import CustomUser as Employee
-
 
 STATUS = [
         (0, 'Выполнен'),
