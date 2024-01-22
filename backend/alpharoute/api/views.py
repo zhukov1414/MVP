@@ -1,7 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (AllowAny,)
 
 from api.permissions import IsOwnerOrReadOnly
 from employee.models import CustomUser
@@ -12,7 +11,6 @@ from ipr.models import Comment, IndividualDevelopmentPlan, Task
 from .serializers import (CommentSerializer, CustomUserListSerializer,
                           IndividualDevelopmentPlanCreateSerializer,
                           IndividualDevelopmentPlanShortSerializer,
-                        #   IndividualDevelopmentPlanSerializer,
                           TaskSerializer, TemplateSerializer)
 
 
@@ -27,7 +25,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    # permission_classes = (AllowAny, )
+    permission_classes = (IsOwnerOrReadOnly, )
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
     http_method_names = ['get', 'post', 'delete']
@@ -52,7 +50,6 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
 
     queryset = IndividualDevelopmentPlan.objects.all()
     permission_classes = (AllowAny,)
-    # serializer_class = IndividualDevelopmentPlanSerializer
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

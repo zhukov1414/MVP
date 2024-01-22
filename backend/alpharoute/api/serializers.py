@@ -99,56 +99,6 @@ class TaskSerializer(serializers.ModelSerializer):
         return super().update(task, validated_data)
 
 
-# class IndividualDevelopmentPlanSerializer(serializers.ModelSerializer):
-#     """Сериализатор для ИПР."""
-#     task = TaskSerializer(many=True, required=True,)
-#     # employee = serializers.SlugRelatedField(
-#     #     read_only=True, slug_field='username',
-#     #     required=True)
-#     employee = CustomUserSerializer(read_only=True)
-
-#     class Meta:
-#         model = IndividualDevelopmentPlan
-#         fields = ('id',
-#                   'employee',
-#                   'title',
-#                   'goal',
-#                   'description',
-#                   'deadline',
-#                   'task'
-#                   )
-
-#     def validate(self, data):
-#         task = self.initial_data.get('task')
-#         if not task:
-#             raise serializers.ValidationError('Добавьте хотя бы одну задачу')
-#         return data
-
-#     def create_tasks(self, tasks, ipr):
-#         Task.objects.bulk_create([
-#             Task(
-#                 ipr=ipr, title=task['title'],
-#                 description=task['description'],
-#                 linkURL=task['linkURL'],
-#                 deadline=task['deadline'],
-#                 status=task['status'])for task in tasks])
-
-#     def create(self, validated_data):
-#         tasks = validated_data.pop('task')
-#         ipr = IndividualDevelopmentPlan.objects.create(**validated_data)
-#         self.create_tasks(tasks, ipr)
-#         return ipr
-
-#     def update(self, ipr, validated_data):
-#         Task.objects.filter(ipr=ipr).all().delete()
-#         tasks = validated_data.pop('task')
-#         self.create_tasks(tasks, ipr)
-#         return super().update(ipr, validated_data)
-
-
-
-                          
-                          
 class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра ИПР."""
     task = TaskSerializer(many=True, required=True,)
@@ -187,7 +137,7 @@ class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
         task = self.initial_data.get('task')
         if not task:
             raise serializers.ValidationError('Добавьте хотя бы одну задачу')
-        return data    
+        return data
 
     def create_tasks(self, tasks, ipr):
         Task.objects.bulk_create([
