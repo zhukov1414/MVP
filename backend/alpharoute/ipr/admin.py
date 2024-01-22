@@ -17,11 +17,12 @@ class IndividualDevelopmentPlanAdmin(admin.ModelAdmin):
                     'deadline',
                     )
     empty_value_display = '-пусто-'
+    inlines = [TaskInline, ]
 
 
 class TaskAdmin(admin.ModelAdmin):
 
-    list_display = ('title', 'deadline', 'status')
+    list_display = ('id', 'title', 'deadline', 'status')
     empty_value_display = '-пусто-'
 
 
