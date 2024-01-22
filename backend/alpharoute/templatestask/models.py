@@ -1,14 +1,24 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from ipr.models import BaseTaskModel
 
 
 class Department(models.Model):
-    title = models.CharField(max_length=255,)
+
+    DEPARTMENT = [
+        (0, 'Дизайн'),
+        (1, 'QA'),
+        (2, 'BA'),
+        (3, 'SA'),
+    ]
+
+    # title = models.CharField('Направление', max_length=255,)
+    title = models.PositiveSmallIntegerField(_('title'), choices=DEPARTMENT)
 
     class Meta:
-        verbose_name = 'отдел/направление'
-        verbose_name_plural = 'отдел/направление'
+        verbose_name = 'направление'
+        verbose_name_plural = 'направления'
         ordering = ['title']
 
     def __str__(self):
