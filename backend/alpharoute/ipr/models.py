@@ -3,24 +3,42 @@ import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from employee.models import CustomUser as Employee
-
-STATUS = [
-        (0, 'открыт'),
-        (1, 'в работе'),
-        (2, 'выполнен'),
-        (3, 'отменен'),
-    ]
+from employee.models import CustomUser
+from ipr.constants import STATUS_IPR, STATUS_TASK
 
 
-class IndividualDevelopmentPlan(models.Model):
+class PubDateModel(models.Model):
+    """Абстрактная модель для времени"""
+
+    pub_date = models.DateTimeField(
+        'Дата добавления',
+        auto_now_add=True,
+        db_index=True)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.pub_date
+
+
+class IndividualDevelopmentPlan(PubDateModel):
 
     title = models.CharField(max_length=255,)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    # author = models.ForeignKey(  # хочу, чтобы был
+    #     CustomUser,
+    #     on_delete=models.CASCADE,
+    #     related_name='ipr_author',
+    #     verbose_name='автор',
+    # )
+    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
+                                 related_name='ipr_employee',
+                                 verbose_name='сотрудник',)
     goal = models.CharField(max_length=255)
     description = models.TextField()
     deadline = models.DateField()
-    status = models.PositiveSmallIntegerField(_('status'), choices=STATUS,)
+    status = models.PositiveSmallIntegerField(_('status'), choices=STATUS_IPR,
+                                              default=0,)
 
     class Meta:
         verbose_name = 'Индивиуальный план развития'
@@ -41,12 +59,13 @@ class BaseTaskModel(models.Model):
         abstract = True
 
 
-class Task(BaseTaskModel):
+class Task(BaseTaskModel,PubDateModel):
     ipr = models.ForeignKey(
         IndividualDevelopmentPlan,
-        on_delete=models.CASCADE, related_name='task')
+        on_delete=models.CASCADE, related_name='task',
+        verbose_name="ipr")
     deadline = models.DateField(null=True, blank=True)
-    status = models.PositiveSmallIntegerField(_('status'), choices=STATUS)
+    status = models.PositiveSmallIntegerField(_('status'), choices=STATUS_TASK)
 
     class Meta:
         verbose_name = 'Задача'
@@ -57,8 +76,8 @@ class Task(BaseTaskModel):
 
 
 class Comment(models.Model):
-    author = models.ForeignKey(
-        Employee, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
+                               related_name='comments')
     task = models.ForeignKey(
         Task, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()

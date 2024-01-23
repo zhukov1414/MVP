@@ -10,7 +10,8 @@ class TaskInline(admin.TabularInline):
 
 class IndividualDevelopmentPlanAdmin(admin.ModelAdmin):
 
-    list_display = ('title',
+    list_display = ('id',
+                    'title',
                     'employee',
                     'goal',
                     'description',

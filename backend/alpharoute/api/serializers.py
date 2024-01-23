@@ -1,26 +1,32 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from employee.models import CustomUser
-from templatestask.models import Department, Template
+from ipr.constants import STATUS_IPR, STATUS_TASK
 from ipr.models import Comment, IndividualDevelopmentPlan, Task
+from templatestask.models import Department, Template
 
 
 class CustomUserSerializer(UserSerializer):
     """Сериализатор для управления пользователями."""
 
+    image = Base64ImageField(required=True)
+
     class Meta:
         model = CustomUser
-        fields = ('id', 'username',
+        fields = ('id', 'username', 'image',
                   'first_name', 'last_name', 'position', )
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     """Сериализатор для создания пользователя."""
 
+    image = Base64ImageField(required=True)
+
     class Meta:
         model = CustomUser
-        fields = ('id', 'username',
+        fields = ('id', 'username', 'image',
                   'first_name', 'last_name', 'password', )
 
 
@@ -29,7 +35,7 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'name', 'first_name', 'last_name', 'position',)
+        fields = ('id', 'name', 'first_name', 'last_name', 'position', 'image')
         read_only_fields = ('id', 'name', 'first_name',
                             'last_name', 'position',)
 
@@ -54,49 +60,46 @@ class TemplateSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     """Cериализатор для комментариев."""
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='name',
+        read_only=True, slug_field='username',
     )
-    # task = serializers.SlugRelatedField(
-    #     read_only=True, slug_field='title',
-    # )
+    # author = CustomUserSerializer(read_only=True)
 
     class Meta:
         fields = ('content', 'author', 'task', 'postdate')
-        # read_only_fields = ('task',)
+        read_only_fields = ('post',)
         model = Comment
 
 
 class TaskSerializer(serializers.ModelSerializer):
     """Cериализатор для задач."""
-    ipr = serializers.SlugRelatedField(
-        read_only=True, slug_field='title',
-    )
+    # ipr = serializers.SlugRelatedField(
+    #     read_only=True, slug_field='title',
+    # )
     comments = CommentSerializer(many=True, read_only=True)
+    is_commented = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         read_only_fields = ('ipr',)
         fields = ('title', 'description', 'linkURL',
-                  'ipr', 'deadline', 'status', 'comments')
+                  'ipr', 'deadline', 'status', 'comments',
+                  'is_commented')
 
-    def create_comments(self, comments, task):
-        Comment.objects.bulk_create([
-            Comment(
-                task=task, author=comment['author'],
-                postdate=comment['postdate'],
-                content=comment['content'])for comment in comments])
+    def get_is_commented(self, obj):
+        return Comment.objects.filter(
+            task=self.context.get('request').task).exists()
 
-    def create(self, validated_data):
-        comments = validated_data.pop('comments')
-        task = Task.objects.create(**validated_data)
-        self.create_comments(comments, task)
-        return task
+    # def create(self, validated_data):
+    #     comments = validated_data.pop('comments')
+    #     task = Task.objects.create(**validated_data)
+    #     self.create_comments(comments, task)
+    #     return task
 
-    def update(self, task, validated_data):
-        Comment.objects.filter(task=task).all().delete()
-        comments = validated_data.pop('comments')
-        self.create_comments(comments, task)
-        return super().update(task, validated_data)
+    # def update(self, task, validated_data):
+    #     Comment.objects.filter(task=task).all().delete()
+    #     comments = validated_data.pop('comments')
+    #     self.create_comments(comments, task)
+    #     return super().update(task, validated_data)
 
 
 class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
@@ -119,8 +122,6 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
 class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и редактирования ИПР."""
     task = TaskSerializer(many=True, required=True,)
-    employee = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',)
 
     class Meta:
         model = IndividualDevelopmentPlan

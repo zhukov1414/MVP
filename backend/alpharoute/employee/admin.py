@@ -4,7 +4,7 @@ from .models import CustomUser
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'first_name', 'last_name', 'position')
+    list_display = ('username', 'name', 'first_name', 'last_name', 'position')
     list_filter = ('email', 'position', 'is_staff')
     search_fields = ('username',)
     empty_value_display = '-пусто-'
