@@ -3,8 +3,8 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from employee.models import CustomUser
-from ipr.constants import STATUS_IPR, STATUS_TASK
-from ipr.models import Comment, IndividualDevelopmentPlan, Task
+#from ipr.constants import STATUS_IPR, STATUS_TASK
+from ipr.models import Comment, IndividualDevelopmentPlan, Task, StatusTask
 from templatestask.models import Department, Template
 
 
@@ -28,6 +28,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = CustomUser
         fields = ('id', 'username', 'image',
                   'first_name', 'last_name', 'password', )
+        
+        # def create(self, validated_data):
+        #     return CustomUser.objects.create_user(
+        #    validated_data['username'],
+        #    None,
+        #    validated_data['password'])
 
 
 class CustomUserListSerializer(serializers.ModelSerializer):
@@ -72,6 +78,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     """Cериализатор для задач."""
+    
     # ipr = serializers.SlugRelatedField(
     #     read_only=True, slug_field='title',
     # )
@@ -82,7 +89,7 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         read_only_fields = ('ipr',)
         fields = ('title', 'description', 'linkURL',
-                  'ipr', 'deadline', 'status', 'comments',
+                  'deadline', 'status', 'comments',
                   'is_commented')
 
     def get_is_commented(self, obj):
@@ -122,6 +129,8 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
 class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и редактирования ИПР."""
     task = TaskSerializer(many=True, required=True,)
+    status = serializers.SerializerMethodField()
+    status_percent = serializers.SerializerMethodField()
 
     class Meta:
         model = IndividualDevelopmentPlan
@@ -131,8 +140,27 @@ class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
                   'goal',
                   'description',
                   'deadline',
+                  'status',
+                  'status_percent',
                   'task'
                   )
+
+#    def get_status():
+        
+
+
+    def get_status_percent(self, obj):
+        """Подсчет процента выполненных задач."""
+        
+        tasks = Task.objects.all()
+        total_task = tasks.filter(id=obj.task).count()
+        completed_task = tasks.filter(StatusTask.DONE).count()
+        try:
+            percent = (completed_task / total_task) * 100
+        except ZeroDivisionError:
+            return 0
+        return percent
+
 
     def validate(self, data):
         task = self.initial_data.get('task')
@@ -160,3 +188,4 @@ class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
         tasks = validated_data.pop('task')
         self.create_tasks(tasks, ipr)
         return super().update(ipr, validated_data)
+

@@ -3,22 +3,16 @@ from django.contrib import admin
 from ipr import models
 
 
-class TaskInline(admin.TabularInline):
-    model = models.Task
-    extra = 0
+#class TaskInline(admin.TabularInline):
+#    model = models.Task
+#    extra = 0
 
 
 class IndividualDevelopmentPlanAdmin(admin.ModelAdmin):
 
-    list_display = ('id',
-                    'title',
-                    'employee',
-                    'goal',
-                    'description',
-                    'deadline',
-                    )
+
     empty_value_display = '-пусто-'
-    inlines = [TaskInline, ]
+    #inlines = [TaskInline, ]
 
 
 class TaskAdmin(admin.ModelAdmin):

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from api.permissions import IsOwnerOrReadOnly
 from employee.models import CustomUser
-from ipr.models import Comment, IndividualDevelopmentPlan, Task
+from ipr.models import Comment, IndividualDevelopmentPlan, Task, StatusIpr, StatusTask
 from templatestask.models import Template
 
 from .serializers import (CommentSerializer, CustomUserCreateSerializer,
@@ -27,6 +27,7 @@ class CustomUserViewSet(viewsets.ReadOnlyModelViewSet):
         methods=['get'],
         url_path='me',
         permission_classes=[IsAuthenticated])
+
     def profile(self, request):
         """Просмотр информации о себе."""
         serializer = CustomUserSerializer(
@@ -76,8 +77,33 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
             return IndividualDevelopmentPlanShortSerializer
         return IndividualDevelopmentPlanCreateSerializer
 
+#    def perform_create(self, serializer):
+#        serializer.save()
+
+#    def perform_update(self, serializer):
+#        serializer.save()
+
     def perform_create(self, serializer):
-        serializer.save()
+        ipr = serializer.save()
+        ipr.status = StatusIpr.CREATED
+        ipr.save()
 
     def perform_update(self, serializer):
-        serializer.save()
+        status = serializer.validated_data.get('status')
+        ipr = serializer.instance
+
+        if status == StatusIpr.INWORK:
+            ipr.status = StatusIpr.INWORK
+            ipr.save()
+
+        if status == StatusIpr.DONE:
+            ipr.status = StatusIpr.DONE
+            ipr.save()
+
+        if status == StatusIpr.CHECKED:
+            ipr.status = StatusIpr.CHECKED
+            ipr.save()
+
+        if status == StatusIpr.STOPED:
+            ipr.status = StatusIpr.STOPED
+            ipr.save()
