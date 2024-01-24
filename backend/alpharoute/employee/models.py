@@ -8,7 +8,9 @@ class CustomUser(AbstractUser):
     first_name = models.CharField('Отчество', max_length=150)
     last_name = models.CharField('Фамилия', max_length=150)
     position = models.CharField(max_length=150)
-    password = models.CharField(max_length=150)
+    password = models.CharField(max_length=50)
+    photo = models.ImageField('Фото', upload_to='photo',
+                              blank=True)
 
     class Meta:
         verbose_name = 'сотрудник',

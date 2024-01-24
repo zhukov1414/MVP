@@ -6,10 +6,11 @@ from django.utils.translation import gettext_lazy as _
 from employee.models import CustomUser as Employee
 
 STATUS = [
-        (0, 'открыт'),
+        (0, 'не выполнен'),
         (1, 'в работе'),
         (2, 'выполнен'),
-        (3, 'отменен'),
+        (3, 'проверен'),
+        (4, 'отменен'),
     ]
 
 
