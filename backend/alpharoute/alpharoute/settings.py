@@ -13,7 +13,7 @@ SQLITE = True
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = 'employee.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     'djoser',
     'django_filters',
     'api',
-    'employee',
+    'users',
     'ipr',
     'templatestask',
 ]
@@ -103,11 +103,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'ru-RU'
+LLANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'Europe/Moscow'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 
@@ -126,12 +128,18 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
+
+    # 'DEFAULT_PAGINATION_CLASS': 'api.paginators.Paginator',
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'PAGE_SIZE': 6
 }
 
 
 DJOSER = {
-    # 'LOGIN_FIELD': 'email',
+    'LOGIN_FIELD': 'username',
     'SERIALIZERS': {
         'current_user': 'api.serializers.CustomUserSerializer',
         'user': 'api.serializers.CustomUserSerializer',
@@ -139,6 +147,7 @@ DJOSER = {
     },
 
     'PERMISSIONS': {
+        # 'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
         'user': ['rest_framework.permissions.AllowAny'],
         'user_list': ['rest_framework.permissions.AllowAny'],
     },
