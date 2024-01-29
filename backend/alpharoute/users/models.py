@@ -20,11 +20,6 @@ class CustomUser(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=150)
     position = models.CharField(max_length=150)
     password = models.CharField(max_length=150)
-    manager = models.ForeignKey(  # для тех, у кого есть руководитель
-        "CustomUser", on_delete=models.SET_NULL,
-        verbose_name="manager",
-        related_name="employee",
-        blank=True, null=True,)
     photo = models.ImageField('Фото', upload_to='photo',
                               blank=True, null=True,)
 
