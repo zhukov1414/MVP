@@ -10,14 +10,19 @@ class TaskInline(admin.TabularInline):
 
 class IndividualDevelopmentPlanAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'title', 'employee', 'deadline',)
+    list_display = ('title',
+                    'employee',
+                    'goal',
+                    'description',
+                    'deadline',
+                    )
     empty_value_display = '-пусто-'
     inlines = [TaskInline, ]
 
 
 class TaskAdmin(admin.ModelAdmin):
 
-    list_display = ('title', 'ipr', 'deadline', 'status')
+    list_display = ('id', 'title', 'deadline', 'status')
     empty_value_display = '-пусто-'
 
 

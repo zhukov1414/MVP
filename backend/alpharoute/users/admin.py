@@ -4,9 +4,10 @@ from .models import CustomUser
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'first_name', 'last_name', 'position')
-    list_filter = ('email', 'position', 'is_staff')
-    search_fields = ('username',)
+    list_display = ('username', 'name', 'first_name',
+                    'last_name',)
+    list_filter = ('username', 'name')
+    search_fields = ('username', 'name')
     empty_value_display = '-пусто-'
 
 
