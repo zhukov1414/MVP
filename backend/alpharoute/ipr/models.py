@@ -52,7 +52,6 @@ class BaseTaskModel(models.Model):
 
 
 class IndividualDevelopmentPlan(models.Model):
-
     title = models.CharField(max_length=255,)
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
                                  related_name='ipr_employee',
@@ -72,28 +71,7 @@ class IndividualDevelopmentPlan(models.Model):
         return self.title
 
 
-class Task(BaseTaskModel):
-    ipr = models.ForeignKey(
-        IndividualDevelopmentPlan,
-        on_delete=models.CASCADE, related_name='task')
-    deadline = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=12,
-                              choices=StatusTask.choices,
-                              default=StatusTask.NOCOMLETED)
-
-    class Meta:
-        verbose_name = 'Задача'
-        verbose_name_plural = 'Задачи'
-
-    def __str__(self):
-        return self.title
-
-
 class Comment(models.Model):
-    author = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name='comments')
-    task = models.ForeignKey(
-        Task, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
     postdate = models.DateTimeField(auto_now_add=True)
 
@@ -106,3 +84,22 @@ class Comment(models.Model):
         super().save(*args, **kwargs)
         self.postdate = datetime.datetime.now()
         super().save(*args, **kwargs)
+
+
+class Task(BaseTaskModel):
+    ipr = models.ForeignKey(
+        IndividualDevelopmentPlan,
+        on_delete=models.CASCADE, related_name='task')
+    deadline = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=12,
+                              choices=StatusTask.choices,
+                              default=StatusTask.NOCOMLETED)
+    comments = models.ForeignKey(Comment, on_delete=models.CASCADE,
+                                 related_name='tasks_comments')
+
+    class Meta:
+        verbose_name = 'Задача'
+        verbose_name_plural = 'Задачи'
+
+    def __str__(self):
+        return self.title

@@ -13,7 +13,6 @@ class Department(models.Model):
         (3, 'SA'),
     ]
 
-    # title = models.CharField('Направление', max_length=255,)
     title = models.PositiveSmallIntegerField(_('title'), choices=DEPARTMENT)
 
     class Meta:
@@ -22,7 +21,7 @@ class Department(models.Model):
         ordering = ['title']
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class Template(BaseTaskModel):
@@ -34,4 +33,4 @@ class Template(BaseTaskModel):
         ordering = ['department']
 
     def __str__(self):
-        return f'{self.department} - {self.title}'
+        return str(self.department)
