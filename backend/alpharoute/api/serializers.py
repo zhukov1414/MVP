@@ -79,7 +79,7 @@ class TaskSerializer(serializers.ModelSerializer):
             task=obj).exists()
 
     def get_comments(self, obj):
-        tasks = Task.objects.filter(ipt=obj)
+        tasks = Task.objects.filter(ipr=obj)
         return TaskSerializer(tasks, many=True).data
 
     def create(self, validated_data):
@@ -87,6 +87,14 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def update(self, task, validated_data):
         return super().update(task, validated_data)
+
+    # def get_tasks(self, obj):
+    #     tasks = Task.objects.filter(ipt=obj)
+    #     return TaskSerializer(tasks, many=True).data
+
+    # def check_status(self, tasks):
+    #     for task in tasks:
+    #         if self.task.filter(status=StatusTask.INWORK).exists()
 
 
 class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
@@ -156,18 +164,20 @@ class CustomUserListSerializer(serializers.ModelSerializer):
     """Сериализация списка пользователей."""
 
     photo = Base64ImageField()
-    # ipr = IndividualDevelopmentPlanShortSerializer(many=True,)
+    ipr = IndividualDevelopmentPlanShortSerializer(many=True,)
 
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'name', 'first_name', 'last_name',
                   'position', 'photo',
-                  'manager', )#'ipr')
+                  'manager', 'ipr')
 
         read_only_fields = ('id',  'first_name',
                             'last_name', 'position', 'photo')
 
-    # def get_ipr(self, obj):
-    #     return IndividualDevelopmentPlan.objects.filter(
-    #         employee=self.context['request'].user)
+    def get_ipr(self, obj):
+        return IndividualDevelopmentPlan.objects.filter(
+            employee=obj)
+    # def get_tasks(self, obj):
+    #     tasks = Task.objects.filter(ipt=obj)
     

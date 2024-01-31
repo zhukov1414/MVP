@@ -6,7 +6,7 @@ from django.db import models
 class CustomUser(AbstractUser):
     """Модель пользователя."""
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'position']
 
     username = models.CharField(
         max_length=150,

@@ -26,7 +26,7 @@ class CustomUserViewSet(UserViewSet):
     queryset = CustomUser.objects.select_related('manager')
     # permission_classes=[IsAuthenticated]
     serializer_class = CustomUserSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ['get', 'patch', 'delete']
 
     @action(  # Кажется, эта часть все-таки полезная
         detail=False,
@@ -65,7 +65,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsOwnerOrReadOnly, )
     serializer_class = CommentSerializer
     # queryset = Comment.objects.all()
-    # http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete']
 
     def perform_create(self, serializer):
         task = get_object_or_404(Task, id=self.kwargs.get('task_id'))
