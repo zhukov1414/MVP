@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Копируем остальное содержимое проекта
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "alpharoute..wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "alpharoute.wsgi"]

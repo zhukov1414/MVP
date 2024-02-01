@@ -11,7 +11,7 @@ DEBUG = True
 
 SQLITE = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['84.201.133.120', 'localhost:8000', 'localhost']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -37,6 +37,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -114,6 +115,7 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = '/media/'
@@ -153,3 +155,7 @@ DJOSER = {
     },
     'HIDE_USERS': False,
 }
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000'
+]
