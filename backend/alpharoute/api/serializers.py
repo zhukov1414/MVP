@@ -7,6 +7,7 @@ from users.models import CustomUser
 
 from ipr.models import Comment, IndividualDevelopmentPlan, Task
 from templatestask.models import Department, Template
+from datetime import date
 
 
 class CustomUserSerializer(UserSerializer):
@@ -27,6 +28,68 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = CustomUser
         fields = ('id', 'username', 'name', 'password', 'first_name',
                   'last_name', 'position', 'photo', 'manager')
+
+
+class IndividualDevelopmentPlanIprSerializer(serializers.ModelSerializer):
+    """Сериализатор для очень короткого отображения ипр в списке сотрудников
+    (мало полей, но есть прогресс и указание на просроченность)."""
+
+    is_out_if_date = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
+
+    class Meta:
+        model = IndividualDevelopmentPlan
+        fields = ('id',
+                  'title',
+                  'deadline',
+                  'is_out_if_date',
+                  'progress',
+                  )
+
+    def get_is_out_if_date(self, data):
+        now = date.today()
+        bad_status = ('created', 'inwork')
+
+        if now > data.deadline and data.status in bad_status:
+            return True
+        return False
+
+    def get_progress(self, obj):
+        tasks = Task.objects.filter(ipr=obj).count()
+        done_tasks = Task.objects.filter(ipr=obj, status='done').count()
+        return round(done_tasks/tasks*100, 2)  # получаем процент
+
+
+class CustomUserListSerializer(serializers.ModelSerializer):
+    """Сериализация списка пользователей без лишних полей."""
+
+    photo = Base64ImageField()
+    ipr = serializers.SerializerMethodField()
+    # ipr = IndividualDevelopmentPlanIprSerializer()
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'name', 'first_name', 'last_name',
+                  'position', 'photo', 'ipr', )
+
+        read_only_fields = ('id',  'first_name',
+                            'last_name', 'position', 'photo')
+
+    def get_ipr(self, obj):
+        ipr = IndividualDevelopmentPlan.objects.filter(
+            employee_id=obj).all()
+        return IndividualDevelopmentPlanIprSerializer(ipr, many=True).data
+
+
+class CustomUserInIprSerializer(serializers.ModelSerializer):
+    """Просмотр пользователя из ипр (имя/должность/фото)."""
+
+    photo = Base64ImageField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('name', 'first_name', 'last_name',
+                  'position', 'photo',)
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -97,24 +160,50 @@ class TaskSerializer(serializers.ModelSerializer):
     #         if self.task.filter(status=StatusTask.INWORK).exists()
 
 
-class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
-    """Сериализатор для просмотра ИПР."""
-    task = TaskSerializer(many=True, required=True,)
+class TaskInIprSerializer(serializers.ModelSerializer):
+    """Просмотр задачи в ипр."""
+
+    is_commented = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        read_only_fields = ('ipr',)
+        fields = ( 'title', 'description', 'status', 
+                  'deadline', 'is_commented')
+
+    def get_is_commented(self, obj):
+        return Comment.objects.filter(
+            task=obj).exists()
+
+
+class IndividualDevelopmentPlanIprSerializer(serializers.ModelSerializer):
+    """Сериализатор для очень короткого отображения ипр в списке сотрудников
+    (мало полей, но есть прогресс и указание на просроченность)."""
+
+    is_out_if_date = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = IndividualDevelopmentPlan
         fields = ('id',
-                  'employee',
                   'title',
-                  'goal',
-                  'description',
                   'deadline',
-                  'task'
+                  'is_out_if_date',
+                  'progress',
                   )
 
-    def get_tasks(self, obj):
-        tasks = Task.objects.filter(ipt=obj)
-        return TaskSerializer(tasks, many=True).data
+    def get_is_out_if_date(self, data):
+        now = date.today()
+        bad_status = ('created', 'inwork')
+
+        if now > data.deadline and data.status in bad_status:
+            return True
+        return False
+
+    def get_progress(self, obj):
+        tasks = Task.objects.filter(ipr=obj).count()
+        done_tasks = Task.objects.filter(ipr=obj, status='done').count()
+        return round(done_tasks/tasks*100, 2)  # получаем процент
 
 
 class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
@@ -160,24 +249,52 @@ class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
         return super().update(ipr, validated_data)
 
 
-class CustomUserListSerializer(serializers.ModelSerializer):
-    """Сериализация списка пользователей."""
+class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
+    """Сериализатор для просмотра ИПР на странице сотрудника."""
+    task = TaskInIprSerializer(many=True, required=True,)
+    progress = serializers.SerializerMethodField()
+    # employee = CustomUserInIprSerializer()
+    is_out_if_date = serializers.SerializerMethodField()
 
-    photo = Base64ImageField()
-    ipr = IndividualDevelopmentPlanShortSerializer(many=True,)
+    class Meta:
+        model = IndividualDevelopmentPlan
+        fields = (#'employee',
+                  'title',
+                  'goal',
+                  'description',
+                  'deadline',
+                  'is_out_if_date',
+                  'progress',
+                  'task',
+                  )
+
+    def get_tasks(self, obj):
+        tasks = Task.objects.filter(ipr=obj)
+        return TaskInIprSerializer(tasks, many=True).data
+
+    def get_progress(self, obj):
+        tasks = Task.objects.filter(ipr=obj).count()
+        done_tasks = Task.objects.filter(ipr=obj, status='done').count()
+        return round(done_tasks/tasks*100, 2)  # получаем процент
+
+    def get_is_out_if_date(self, data):
+        now = date.today()
+        bad_status = ('created', 'inwork')
+
+        if now > data.deadline and data.status in bad_status:
+            return True
+        return False
+
+
+class CustomUserPageSerializer(UserSerializer):
+    """Сериализатор для просмотра ИПР."""
+
+    ipr = IndividualDevelopmentPlanShortSerializer()
 
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'position', 'photo',
-                  'manager', 'ipr')
-
+                  'position', 'photo', 'manager',
+                  'ipr')
         read_only_fields = ('id',  'first_name',
                             'last_name', 'position', 'photo')
-
-    def get_ipr(self, obj):
-        return IndividualDevelopmentPlan.objects.filter(
-            employee=obj)
-    # def get_tasks(self, obj):
-    #     tasks = Task.objects.filter(ipt=obj)
-    
