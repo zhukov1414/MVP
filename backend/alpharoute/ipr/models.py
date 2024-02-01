@@ -2,6 +2,10 @@ import datetime
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MaxValueValidator
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.db import transaction
 
 from users.models import CustomUser
 
@@ -62,16 +66,18 @@ class IndividualDevelopmentPlan(models.Model):
     status = models.CharField(max_length=12,
                               choices=StatusIpr.choices,
                               default=StatusIpr.CREATED)
+    progress = models.PositiveIntegerField(default=0,
+                                           validators=[MaxValueValidator(100)])
 
     class Meta:
         verbose_name = 'Индивиуальный план развития'
         verbose_name_plural = 'Планы развития'
 
-    def __str__(self):
-        return self.title
-
 
 class Comment(models.Model):
+    author = models.ForeignKey(CustomUser,
+                               on_delete=models.CASCADE,
+                               related_name='author')
     content = models.TextField()
     postdate = models.DateTimeField(auto_now_add=True)
 
@@ -85,6 +91,9 @@ class Comment(models.Model):
         self.postdate = datetime.datetime.now()
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return self.content
+
 
 class Task(BaseTaskModel):
     ipr = models.ForeignKey(
@@ -95,6 +104,8 @@ class Task(BaseTaskModel):
                               choices=StatusTask.choices,
                               default=StatusTask.NOCOMLETED)
     comments = models.ForeignKey(Comment, on_delete=models.CASCADE,
+                                 null=True,
+                                 blank=True,
                                  related_name='tasks_comments')
 
     class Meta:
@@ -103,3 +114,32 @@ class Task(BaseTaskModel):
 
     def __str__(self):
         return self.title
+
+
+@receiver(pre_save, sender=IndividualDevelopmentPlan)
+def update_progress(sender, instance, **kwargs):
+    with transaction.atomic():
+        if instance.status == StatusIpr.CREATED:
+            instance.progress = 0
+        elif instance.status == StatusIpr.INWORK:
+            instance.progress = 50
+        elif instance.status == StatusIpr.DONE:
+            instance.progress = 100
+        else:
+            instance.progress = 0
+
+
+@receiver(pre_save, sender=Task)
+def update_ipr_status(sender, instance, **kwargs):
+    with transaction.atomic():
+        if instance.ipr:
+            task_status = instance.status
+
+            if task_status == StatusTask.INWORK:
+                instance.ipr.status = StatusIpr.INWORK
+            elif task_status == StatusTask.DONE:
+                instance.ipr.status = StatusIpr.DONE
+            else:
+                instance.ipr.status = StatusIpr.CREATED
+
+            instance.ipr.save()

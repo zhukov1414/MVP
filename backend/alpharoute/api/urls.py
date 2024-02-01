@@ -4,7 +4,6 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     get_all_users,
     get_user_by_id,
-    get_all_individual_development_plans,
     get_individual_development_plans_for_employee,
     create_individual_development_plan,
     update_individual_development_plan,
@@ -16,6 +15,9 @@ from .views import (
     delete_ipr_task,
     create_task_comment,
     get_task_comments,
+    is_superuser,
+    get_all_ipr_users,
+    get_all_users_and_ipr,
     TemplateViewSet,
 )
 
@@ -27,13 +29,12 @@ router_v1.register("templates", TemplateViewSet, basename="templates")
 
 urlpatterns = [
     path("v1/", include(router_v1.urls)),
+    path("v1/is_superuser/", is_superuser, name="is_superuser"),
     path("v1/employee/", get_all_users, name="get_all_users"),
+    path("v1/employee/get_all_users_and_ipr/",
+         get_all_users_and_ipr, name="get_all_users_and_ipr"),
+    path("v1/employee_get_ipr/", get_all_ipr_users, name="get_all_ipr_users"),
     path("v1/employee/<int:id>/", get_user_by_id, name="get_user_by_id"),
-    path(
-        "v1/individual-development-plan/",
-        get_all_individual_development_plans,
-        name="get_all_individual_development_plans",
-    ),
     path(
         "v1/employee/<int:employee_id>/individual-plan/",
         get_individual_development_plans_for_employee,
