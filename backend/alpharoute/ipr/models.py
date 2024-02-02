@@ -119,12 +119,11 @@ class Task(BaseTaskModel):
 @receiver(pre_save, sender=IndividualDevelopmentPlan)
 def update_progress(sender, instance, **kwargs):
     with transaction.atomic():
-        if instance.status == StatusIpr.CREATED:
-            instance.progress = 0
-        elif instance.status == StatusIpr.INWORK:
-            instance.progress = 50
-        elif instance.status == StatusIpr.DONE:
-            instance.progress = 100
+        total_tasks = instance.task.count()
+        completed_tasks = instance.task.filter(status=StatusTask.DONE).count()
+
+        if total_tasks > 0:
+            instance.progress = (completed_tasks / total_tasks) * 100
         else:
             instance.progress = 0
 

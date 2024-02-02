@@ -51,7 +51,7 @@ class CommentUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('name', 'first_name')
+        fields = ('name', 'last_name')
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -62,7 +62,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'content', 'postdate')
 
     def get_author(self, obj):
-        return {'name': obj.author.name, 'first_name': obj.author.first_name}
+        return {'name': obj.author.name, 'last_name': obj.author.last_name}
 
 
 class TaskSerializer(serializers.ModelSerializer):
