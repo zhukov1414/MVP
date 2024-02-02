@@ -58,7 +58,7 @@ class IndividualDevelopmentPlanIprSerializer(serializers.ModelSerializer):
     def get_progress(self, obj):
         tasks = Task.objects.filter(ipr=obj).count()
         done_tasks = Task.objects.filter(ipr=obj, status='done').count()
-        if done_tasks >0:
+        if done_tasks > 0:
             return round(done_tasks/tasks*100, 2)
         return 0  # получаем процент
 
@@ -102,7 +102,7 @@ class TaskInIprSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         read_only_fields = ('ipr',)
-        fields = ( 'title', 'description', 'status', 
+        fields = ('title', 'description', 'status',
                   'deadline', 'is_commented')
 
     def get_is_commented(self, obj):
@@ -137,7 +137,7 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
     def get_progress(self, obj):
         tasks = Task.objects.filter(ipr=obj).count()
         done_tasks = Task.objects.filter(ipr=obj, status='done').count()
-        if done_tasks >0:
+        if done_tasks > 0:
             return round(done_tasks/tasks*100, 2)
         return 0  # получаем процент
 
@@ -148,13 +148,6 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
         if now > data.deadline and data.status in bad_status:
             return True
         return False
-
-
-
-
-
-
-
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -171,7 +164,6 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = ('id', 'title', 'description', 'linkURL', 'department')
-        # шаблон привязан к направлению?
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -179,12 +171,16 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username',
     )
-    # author = CustomUserSerializer(read_only=True)
+    task = serializers.SlugRelatedField(
+        read_only=True, slug_field='title',
+    )
 
     class Meta:
         fields = ('content', 'author', 'task', 'postdate')
-        read_only_fields = ('post',)
         model = Comment
+
+    def create(self, validated_data):
+        return Comment.objects.create(**validated_data)
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -210,17 +206,9 @@ class TaskSerializer(serializers.ModelSerializer):
         tasks = Task.objects.filter(ipr=obj)
         return TaskSerializer(tasks, many=True).data
 
-    # def create(self, validated_data):
-    #     return Task.objects.create(**validated_data)
-
-    # def update(self, task, validated_data):
-    #     return super().update(task, validated_data)
-
 
 class TaskChangeSerializer(serializers.ModelSerializer):
     """Cериализатор для создания и редактирования задач."""
-    # ipr = serializers.SlugRelatedField(
-    #     read_only=True, slug_field='id',)
 
     class Meta:
         model = Task
@@ -228,15 +216,10 @@ class TaskChangeSerializer(serializers.ModelSerializer):
                   'deadline', 'status', )
 
     def create(self, validated_data):
-        # ipr = self.context['request'].pk
         return Task.objects.create(**validated_data)
 
     def update(self, task, validated_data):
         return super().update(task, validated_data)
-
-
-
-
 
 
 class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
@@ -281,6 +264,3 @@ class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
         tasks = validated_data.pop('task')
         self.create_tasks(tasks, ipr)
         return super().update(ipr, validated_data)
-
-
-

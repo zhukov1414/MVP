@@ -1,14 +1,12 @@
-from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from djoser.views import UserViewSet
-# from api.permissions import IsOwnerOrReadOnly
 from users.models import CustomUser
 from ipr.models import (Comment, IndividualDevelopmentPlan,
-                        Task, StatusIpr, StatusTask)
+                        Task,)
 from templatestask.models import Template
 
 from .serializers import (CommentSerializer,
@@ -16,7 +14,6 @@ from .serializers import (CommentSerializer,
                           CustomUserSerializer,
                           IndividualDevelopmentPlanCreateSerializer,
                           IndividualDevelopmentPlanShortSerializer,
-                          TaskSerializer,
                           TaskChangeSerializer,
                           TemplateSerializer)
 
@@ -26,11 +23,11 @@ class CustomUserViewSet(UserViewSet):
     отдельного пользователя и список релевантных пользователей."""
 
     queryset = CustomUser.objects.select_related('manager')
-    permission_classes=[IsAuthenticated,]
+    permission_classes = [IsAuthenticated,]
     serializer_class = CustomUserListSerializer
     http_method_names = ['get',]
 
-    @action(  
+    @action(
         detail=False,
         methods=['get'],
         url_path='me',
@@ -60,17 +57,15 @@ class CustomUserViewSet(UserViewSet):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
-
-# class TemplateViewSet(viewsets.ModelViewSet):
-#     queryset = Template.objects.all()
-#     serializer_class = TemplateSerializer
+class TemplateViewSet(viewsets.ModelViewSet):
+    queryset = Template.objects.all()
+    serializer_class = TemplateSerializer
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    # permission_classes = (IsOwnerOrReadOnly, )
     serializer_class = CommentSerializer
     # queryset = Comment.objects.all()
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post',]
 
     def perform_create(self, serializer):
         task = get_object_or_404(Task, id=self.kwargs.get('task_id'))
@@ -94,7 +89,7 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
 
     queryset = IndividualDevelopmentPlan.objects.all()
     permission_classes = (AllowAny,)
-    methods=['get', 'post', 'patch', 'delete'],
+    methods = ['get', 'post', 'patch', 'delete'],
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -123,22 +118,3 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response('Комментариев пока нет',
                         status=status.HTTP_400_BAD_REQUEST)
-
-    # @action(
-    #     detail=True,
-    #     methods=['post'],
-    #     permission_classes=[IsAuthenticated])
-    # def create_task(self, request, pk=id):
-    #     """Добавить новую задачу к существующему ИПР"""  # пока не получилось заставить ее работать
-    #     ipr = IndividualDevelopmentPlan.objects.filter(
-    #         id=pk)
-    #     # ipr = get_object_or_404(IndividualDevelopmentPlan, id=pk)
-    #     if ipr:
-    #         serializer = TaskChangeSerializer(
-    #             data=self.request.data,
-    #             context={'request': request})
-    #         serializer.is_valid(raise_exception=True)
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     return Response('Ваще не туда',
-    #                     status=status.HTTP_400_BAD_REQUEST)
