@@ -95,7 +95,7 @@ class Comment(models.Model):
     task = models.ForeignKey(
         Task, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
-    postdate = models.DateTimeField(auto_now_add=True)
+    postdate = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         verbose_name = 'Комментарий'

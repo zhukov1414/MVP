@@ -66,7 +66,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    # queryset = Comment.objects.all()
+    queryset = Comment.objects.all()
     http_method_names = ['get', 'post',]
 
     def perform_create(self, serializer):

@@ -82,10 +82,12 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
     photo = Base64ImageField()
     ipr = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'name', 'first_name', 'last_name',
+        fields = ('id', 'name', 'first_name', 'last_name', 
+                  'full_name',
                   'position', 'photo', 'ipr', )
 
         read_only_fields = ('id',  'first_name',
@@ -95,6 +97,10 @@ class CustomUserListSerializer(serializers.ModelSerializer):
         ipr = IndividualDevelopmentPlan.objects.filter(
             employee_id=obj).all()
         return IndividualDevelopmentPlanIprSerializer(ipr, many=True).data
+
+    def get_full_name(self, obj):
+        full_name = obj.last_name + ' ' + obj.name + ' ' + obj.first_name
+        return full_name
 
 
 class CustomUserInIprSerializer(serializers.ModelSerializer):
@@ -204,7 +210,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('content', 'author', 'task', 'postdate')
+        fields = ('id', 'content', 'author', 'task', 'postdate')
         model = Comment
 
     def create(self, validated_data):
