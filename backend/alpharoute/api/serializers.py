@@ -86,7 +86,7 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'name', 'first_name', 'last_name', 
+        fields = ('id', 'name', 'first_name', 'last_name',
                   'full_name',
                   'position', 'photo', 'ipr', )
 
@@ -107,11 +107,16 @@ class CustomUserInIprSerializer(serializers.ModelSerializer):
     """Просмотр пользователя из ипр (имя/должность/фото)."""
 
     photo = Base64ImageField()
+    full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('name', 'first_name', 'last_name',
+        fields = ('name', 'first_name', 'last_name', 'full_name',
                   'position', 'photo',)
+
+    def get_full_name(self, obj):
+        full_name = obj.last_name + ' ' + obj.name + ' ' + obj.first_name
+        return full_name
 
 
 class TaskInIprSerializer(serializers.ModelSerializer):
