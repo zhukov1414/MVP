@@ -12,24 +12,25 @@ from ipr.models import (Comment, IndividualDevelopmentPlan,
 from templatestask.models import Template
 
 from .serializers import (CommentSerializer,
-                          CustomUserCreateSerializer,
-                          CustomUserPageSerializer,
                           CustomUserListSerializer,
                           CustomUserSerializer,
                           IndividualDevelopmentPlanCreateSerializer,
                           IndividualDevelopmentPlanShortSerializer,
-                          TaskSerializer, TemplateSerializer)
+                          TaskSerializer,
+                          TaskChangeSerializer,
+                          TemplateSerializer)
 
 
 class CustomUserViewSet(UserViewSet):
-    """Управление пользователями."""
+    """Сериализатор позволяет просматривать список всех пользователей,
+    отдельного пользователя и список релевантных пользователей."""
 
     queryset = CustomUser.objects.select_related('manager')
     permission_classes=[IsAuthenticated,]
     serializer_class = CustomUserListSerializer
     http_method_names = ['get',]
 
-    @action(
+    @action(  
         detail=False,
         methods=['get'],
         url_path='me',
@@ -58,33 +59,6 @@ class CustomUserViewSet(UserViewSet):
         return Response('У вас нет подчиненных',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    # @action(
-    #     detail=True,
-    #     methods=['POST', 'Delete', 'patch', ],
-    #     url_path='ipr',
-    #     permission_classes=[IsAuthenticated])
-    # def get_ipr(self, request, id):
-    #     """создать ипр, если его нет."""
-        
-        
-    #     employee = get_object_or_404(CustomUser, id=id)
-    #     # data = request.data
-    #     data={'employee': employee,},
-    #     serializer = IndividualDevelopmentPlanCreateSerializer(
-    #         employee)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-    #     return Response(f'создан ипр для {employee}',
-    #                     status=status.HTTP_201_CREATED)
-
-    # @ipr.mapping.delete
-    # def ipr_delete(self, request, id):
-    #     """Удалить ипр."""
-    #     get_object_or_404(IndividualDevelopmentPlan,
-    #                       employee_id=id).delete()
-    #     return Response('ИПР удален',
-    #                     status=status.HTTP_204_NO_CONTENT)
-
 
 
 # class TemplateViewSet(viewsets.ModelViewSet):
@@ -92,29 +66,35 @@ class CustomUserViewSet(UserViewSet):
 #     serializer_class = TemplateSerializer
 
 
+class CommentViewSet(viewsets.ModelViewSet):
+    # permission_classes = (IsOwnerOrReadOnly, )
+    serializer_class = CommentSerializer
+    # queryset = Comment.objects.all()
+    http_method_names = ['get', 'post', 'delete']
+
+    def perform_create(self, serializer):
+        task = get_object_or_404(Task, id=self.kwargs.get('task_id'))
+        serializer.save(author=self.request.user, task=task)
+
+
 class TaskViewSet(viewsets.ModelViewSet):
-    serializer_class = TaskSerializer
+    """Вьюсет будет использоваться для работы с имеющимися задачами,
+    создавать их будут в основном из ИПР."""
+    serializer_class = TaskChangeSerializer
     queryset = Task.objects.all()
-    methods=['get', 'post',],
 
     def perform_create(self, serializer):
         ipr = get_object_or_404(IndividualDevelopmentPlan,
-                                id=self.kwargs.get('ipr_id'))
+                                id=self.kwargs.get('ipr'))
         serializer.save(ipr=ipr)
 
 
 class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
     """ВьюСет для всего ИПР."""
 
-    queryset = IndividualDevelopmentPlan.objects.select_related('employee')
-    # queryset = get_object_or_404(IndividualDevelopmentPlan, id=self.kwargs.get('ipr_id'))
+    queryset = IndividualDevelopmentPlan.objects.all()
     permission_classes = (AllowAny,)
-    
-    # def get_queryset(self):
-    #     ipr = get_object_or_404(IndividualDevelopmentPlan, 
-    #                             employee=self.kwargs.get('id'))
-    #     return ipr
-
+    methods=['get', 'post', 'patch', 'delete'],
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -133,7 +113,7 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated])
     def get_all_comments(self, request, pk=id):
         """Посмотреть все комментарии, привязанные к
-        конртетному ипр"""
+        конкретному ипр."""
         comments = Comment.objects.filter(
             task__ipr__id=pk)
         if comments:
@@ -144,21 +124,9 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
         return Response('Комментариев пока нет',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    # @action(
-    #     detail=True,
-    #     # methods=['get', 'post', 'put', 'delete'],
-    #     methods=['get',],
-    #     permission_classes=[IsAuthenticated])
-    # def get_task(self, request, pk=id):
-    #     """Посмотреть конкретную задачу"""
-    #     task = get_object_or_404(Task, id=self.request.id)
-    #     # Comment.objects.filter(
-    #     #     task__ipr__id=pk)
-    #     # if comments:
-    #     #     serializer = CommentSerializer(
-    #     #         comments, many=True,
-    #     #         context={'request': request})
-    #     #     return Response(serializer.data, status=status.HTTP_200_OK)
-    #     return Response('Комментариев пока нет',
-    #                     status=status.HTTP_400_BAD_REQUEST)
-    
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[IsAuthenticated])
+    def create_task(self, request, pk=id):
+        """Добавить новую задачу к существующему ИПР"""  # пока не получилось заставить ее работать
