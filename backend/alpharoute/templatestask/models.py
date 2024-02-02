@@ -7,13 +7,16 @@ from ipr.models import BaseTaskModel
 class Department(models.Model):
 
     DEPARTMENT = [
-        (0, 'Дизайн'),
-        (1, 'QA'),
-        (2, 'BA'),
-        (3, 'SA'),
+        ('frontend', 'Фронтенд'),
+        ('backend', 'Бэкенд'),
+        ('design', 'Дизайн'),
+        ('QA', 'QA'),
+        ('BA', 'BA'),
+        ('SA', 'SA'),
     ]
 
-    title = models.PositiveSmallIntegerField(_('title'), choices=DEPARTMENT)
+    title = models.CharField(_('title'), max_length=100, choices=DEPARTMENT,
+                             unique=True)
 
     class Meta:
         verbose_name = 'направление'
