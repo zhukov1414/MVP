@@ -1,12 +1,15 @@
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,  permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from users.models import CustomUser
 from ipr.models import (Comment, IndividualDevelopmentPlan,
                         Task)
 from templatestask.models import Template
 
 from .serializers import (CommentSerializer,
+                          CustomAlliprListSerializer,
+                          CustomUserWithoutIprSerializer,
                           CustomUserListSerializer,
                           IndividualDevelopmentPlanSerializer,
                           IndividualDevelopmentPlanShortSerializer,
@@ -20,9 +23,43 @@ class TemplateViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def is_superuser(request):
+    user = request.user
+    is_super_user = user.is_superuser
+    return Response({"is_superuser": is_super_user}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
 def get_all_users(request):
     users = CustomUser.objects.all()
     serializer = CustomUserListSerializer(users, many=True)
+    return Response(serializer.data,
+                    status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])  # Получаем всех сотрудников c ипр и без
+def get_all_users_and_ipr(request):
+    users_with_ipr = IndividualDevelopmentPlan.objects.all()
+    users_without_ipr = CustomUserWithoutIprSerializer.get_users_without_ipr()
+
+    serializer_with_ipr = CustomAlliprListSerializer(users_with_ipr,
+                                                     many=True)
+    serializer_without_ipr = CustomUserWithoutIprSerializer(users_without_ipr,
+                                                            many=True)
+
+    response_data = {
+        "with_ipr": serializer_with_ipr.data,
+        "without_ipr": serializer_without_ipr.data,
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def get_all_ipr_users(request):
+    employee = IndividualDevelopmentPlan.objects.all()
+    serializer = CustomAlliprListSerializer(employee, many=True)
     return Response(serializer.data,
                     status=status.HTTP_200_OK)
 
@@ -35,20 +72,6 @@ def get_user_by_id(request, id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except CustomUser.DoesNotExist:
         return Response({"error": "Пользоваетль не найден"},
-                        status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(["GET"])  # Получаем все ИПР
-def get_all_individual_development_plans(request):
-    development_plans = IndividualDevelopmentPlan.objects.all()
-
-    if development_plans:
-        serializer = IndividualDevelopmentPlanShortSerializer(
-            development_plans,
-            many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        return Response({"error": "Индивидуальные планы не найдены"},
                         status=status.HTTP_404_NOT_FOUND)
 
 

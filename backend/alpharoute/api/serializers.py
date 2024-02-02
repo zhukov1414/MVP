@@ -1,3 +1,4 @@
+from datetime import date
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 
@@ -15,7 +16,7 @@ class CustomUserSerializer(UserSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'position', 'photo', 'manager')
+                  'position', 'photo')
         read_only_fields = ('id',  'first_name',
                             'last_name', 'position', 'photo')
 
@@ -46,13 +47,28 @@ class TemplateSerializer(serializers.ModelSerializer):
         # шаблон привязан к направлению?
 
 
+class CommentUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomUser
+        fields = ('name', 'last_name')
+
+
 class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'postdate')
+        fields = ('id', 'author', 'content', 'postdate')
+
+    def get_author(self, obj):
+        return {'name': obj.author.name, 'last_name': obj.author.last_name}
 
 
 class TaskSerializer(serializers.ModelSerializer):
+
+    has_comments = serializers.SerializerMethodField()
+    comments = CommentSerializer()
 
     class Meta:
         model = Task
@@ -61,12 +77,19 @@ class TaskSerializer(serializers.ModelSerializer):
                   'deadline',
                   'description',
                   'status',
-                  'comments',)
+                  'linkURL',
+                  'has_comments',
+                  'comments',
+                  )
+
+    def get_has_comments(self, obj):
+        return obj.comments is not None
 
 
 class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра ИПР."""
     task = TaskSerializer(many=True)
+    is_overdue = serializers.SerializerMethodField()
 
     class Meta:
         model = IndividualDevelopmentPlan
@@ -76,12 +99,18 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
                   'goal',
                   'description',
                   'deadline',
+                  'is_overdue',
+                  'status',
                   'task',
                   )
+
+    def get_is_overdue(self, obj):
+        return obj.deadline < date.today()
 
 
 class IndividualDevelopmentPlanSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и обновления ИПР."""
+
     tasks = TaskSerializer(many=True)
 
     class Meta:
@@ -110,3 +139,46 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
         read_only_fields = ('id',  'first_name',
                             'last_name', 'position', 'photo')
+
+
+class CustomUserWithoutIprSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователей без ИПР."""
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'name', 'first_name', 'last_name',
+                  'position', 'photo')
+
+    @classmethod
+    def get_users_without_ipr(cls):
+        return cls.Meta.model.objects.filter(ipr_employee__isnull=True)
+
+
+class CustomAlliprListSerializer(serializers.ModelSerializer):
+    """Сериализация списка пользователей с ипр."""
+
+    employee = CustomUserSerializer()
+    task = TaskSerializer(many=True)
+    is_overdue = serializers.SerializerMethodField()
+
+    class Meta:
+        model = IndividualDevelopmentPlan
+        fields = ('id',
+                  'employee',
+                  'title',
+                  'goal',
+                  'progress',
+                  'description',
+                  'deadline',
+                  'is_overdue',
+                  'status',
+                  'task',
+                  )
+
+    def get_is_overdue(self, obj):
+        return obj.deadline < date.today()
+
+
+class CustomUserListResponseSerializer(serializers.Serializer):
+    with_ipr = CustomAlliprListSerializer(many=True)
+    without_ipr = CustomUserWithoutIprSerializer(many=True)
