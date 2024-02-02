@@ -78,14 +78,14 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    """Вьюсет будет использоваться для работы с имеющимися задачами,
-    создавать их будут в основном из ИПР."""
+    """Вьюсет для работы с имеющимися задачами,
+    и создания дополнительной в имеющемся ИПР."""
     serializer_class = TaskChangeSerializer
     queryset = Task.objects.all()
 
     def perform_create(self, serializer):
         ipr = get_object_or_404(IndividualDevelopmentPlan,
-                                id=self.kwargs.get('ipr'))
+                                id=self.kwargs.get('ipr_id'))
         serializer.save(ipr=ipr)
 
 
@@ -124,9 +124,21 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
         return Response('Комментариев пока нет',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(
-        detail=True,
-        methods=['post'],
-        permission_classes=[IsAuthenticated])
-    def create_task(self, request, pk=id):
-        """Добавить новую задачу к существующему ИПР"""  # пока не получилось заставить ее работать
+    # @action(
+    #     detail=True,
+    #     methods=['post'],
+    #     permission_classes=[IsAuthenticated])
+    # def create_task(self, request, pk=id):
+    #     """Добавить новую задачу к существующему ИПР"""  # пока не получилось заставить ее работать
+    #     ipr = IndividualDevelopmentPlan.objects.filter(
+    #         id=pk)
+    #     # ipr = get_object_or_404(IndividualDevelopmentPlan, id=pk)
+    #     if ipr:
+    #         serializer = TaskChangeSerializer(
+    #             data=self.request.data,
+    #             context={'request': request})
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     return Response('Ваще не туда',
+    #                     status=status.HTTP_400_BAD_REQUEST)

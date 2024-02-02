@@ -210,11 +210,11 @@ class TaskSerializer(serializers.ModelSerializer):
         tasks = Task.objects.filter(ipr=obj)
         return TaskSerializer(tasks, many=True).data
 
-    def create(self, validated_data):
-        return Task.objects.create(**validated_data)
+    # def create(self, validated_data):
+    #     return Task.objects.create(**validated_data)
 
-    def update(self, task, validated_data):
-        return super().update(task, validated_data)
+    # def update(self, task, validated_data):
+    #     return super().update(task, validated_data)
 
 
 class TaskChangeSerializer(serializers.ModelSerializer):
@@ -224,16 +224,15 @@ class TaskChangeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        # read_only_fields = ('ipr',)
-        fields = '__all__'
-        # fields = ('id', 'title', 'description', 'linkURL',
-        #           'ipr', 'deadline', 'status',)
+        fields = ('id', 'title', 'description', 'linkURL',
+                  'deadline', 'status', )
 
-    # def create(self, validated_data):
-    #     return Task.objects.create(**validated_data)
+    def create(self, validated_data):
+        # ipr = self.context['request'].pk
+        return Task.objects.create(**validated_data)
 
-    # def update(self, task, validated_data):
-    #     return super().update(task, validated_data)
+    def update(self, task, validated_data):
+        return super().update(task, validated_data)
 
 
 
