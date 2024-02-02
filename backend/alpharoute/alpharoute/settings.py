@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'drf_yasg',
     'rest_framework',
     'rest_framework.authtoken',
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -156,6 +158,8 @@ DJOSER = {
     'HIDE_USERS': False,
 }
 
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000'
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3030',
+    'http://localhost:8000',
+    'http://84.201.133.120:8000',
 ]
