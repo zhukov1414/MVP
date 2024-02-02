@@ -36,6 +36,7 @@ class IndividualDevelopmentPlanIprSerializer(serializers.ModelSerializer):
     (мало полей, но есть прогресс и указание на просроченность)."""
 
     is_out_if_date = serializers.SerializerMethodField()
+    is_commented = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
 
     class Meta:
@@ -44,16 +45,9 @@ class IndividualDevelopmentPlanIprSerializer(serializers.ModelSerializer):
                   'title',
                   'deadline',
                   'is_out_if_date',
+                  'is_commented',
                   'progress',
                   )
-
-    def get_is_out_if_date(self, data):
-        now = date.today()
-        bad_status = ('created', 'inwork')
-
-        if now > data.deadline and data.status in bad_status:
-            return True
-        return False
 
     def get_progress(self, obj):
         tasks = Task.objects.filter(ipr=obj).count()
@@ -61,6 +55,26 @@ class IndividualDevelopmentPlanIprSerializer(serializers.ModelSerializer):
         if done_tasks > 0:
             return round(done_tasks/tasks*100, 2)
         return 0  # получаем процент
+
+    def get_is_out_if_date(self, obj,):
+        now = date.today()
+        bad_status = ('created', 'inwork')
+        tasks = Task.objects.filter(ipr=obj)
+
+        if now > obj.deadline and obj.status in bad_status:
+            return True
+
+        for task in tasks:
+            if now > task.deadline and task.status != 'done':
+                return True
+        return False
+
+    def get_is_commented(self, obj,):
+        tasks = Task.objects.filter(ipr=obj)
+        for task in tasks:
+            if Comment.objects.filter(task=task).exists():
+                return True
+        return False
 
 
 class CustomUserListSerializer(serializers.ModelSerializer):
@@ -115,6 +129,7 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
     task = TaskInIprSerializer(many=True, required=True,)
     progress = serializers.SerializerMethodField()
     is_out_if_date = serializers.SerializerMethodField()
+    is_commented = serializers.SerializerMethodField()
     employee = CustomUserInIprSerializer()
 
     class Meta:
@@ -126,6 +141,7 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
                   'description',
                   'deadline',
                   'is_out_if_date',
+                  'is_commented',
                   'progress',
                   'task',
                   )
@@ -141,12 +157,24 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
             return round(done_tasks/tasks*100, 2)
         return 0  # получаем процент
 
-    def get_is_out_if_date(self, data):
+    def get_is_out_if_date(self, obj,):
         now = date.today()
         bad_status = ('created', 'inwork')
+        tasks = Task.objects.filter(ipr=obj)
 
-        if now > data.deadline and data.status in bad_status:
+        if now > obj.deadline and obj.status in bad_status:
             return True
+
+        for task in tasks:
+            if now > task.deadline and task.status != 'done':
+                return True
+        return False
+
+    def get_is_commented(self, obj,):
+        tasks = Task.objects.filter(ipr=obj)
+        for task in tasks:
+            if Comment.objects.filter(task=task).exists():
+                return True
         return False
 
 
@@ -190,13 +218,14 @@ class TaskSerializer(serializers.ModelSerializer):
     )
     comments = CommentSerializer(many=True, read_only=True)
     is_commented = serializers.SerializerMethodField()
+    is_out_if_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         read_only_fields = ('ipr',)
         fields = ('id', 'title', 'description', 'linkURL',
                   'ipr', 'deadline', 'status', 'comments',
-                  'is_commented')
+                  'is_commented', 'is_out_if_date')
 
     def get_is_commented(self, obj):
         return Comment.objects.filter(
@@ -205,6 +234,12 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_comments(self, obj):
         tasks = Task.objects.filter(ipr=obj)
         return TaskSerializer(tasks, many=True).data
+
+    def get_is_out_if_date(self, obj,):
+        now = date.today()
+        if now > obj.deadline and obj.status != 'done':
+            return True
+        return False
 
 
 class TaskChangeSerializer(serializers.ModelSerializer):

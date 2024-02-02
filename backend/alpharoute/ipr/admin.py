@@ -28,7 +28,7 @@ class TaskAdmin(admin.ModelAdmin):
 
 class CommentAdmin(admin.ModelAdmin):
 
-    list_display = ('author', 'task', 'postdate')
+    list_display = ('author', 'task', 'postdate', 'content')
     empty_value_display = '-пусто-'
 
 

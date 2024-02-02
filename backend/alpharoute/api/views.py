@@ -15,6 +15,7 @@ from .serializers import (CommentSerializer,
                           IndividualDevelopmentPlanCreateSerializer,
                           IndividualDevelopmentPlanShortSerializer,
                           TaskChangeSerializer,
+                          TaskSerializer,
                           TemplateSerializer)
 
 
@@ -58,6 +59,7 @@ class CustomUserViewSet(UserViewSet):
 
 
 class TemplateViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post',]
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
 
@@ -75,8 +77,13 @@ class CommentViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с имеющимися задачами,
     и создания дополнительной в имеющемся ИПР."""
-    serializer_class = TaskChangeSerializer
+    # serializer_class = TaskChangeSerializer
     queryset = Task.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TaskSerializer
+        return TaskChangeSerializer
 
     def perform_create(self, serializer):
         ipr = get_object_or_404(IndividualDevelopmentPlan,
@@ -85,7 +92,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
-    """ВьюСет для всего ИПР."""
+    """ВьюСет для ИПР."""
 
     queryset = IndividualDevelopmentPlan.objects.all()
     permission_classes = (AllowAny,)
