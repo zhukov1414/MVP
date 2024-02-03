@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from djoser.views import UserViewSet
 from users.models import CustomUser
 from ipr.models import (Comment, IndividualDevelopmentPlan,
-                        Task,)
-from templatestask.models import Template
+                        Task, Template)
+# from templatestask.models import Template
 
 from .serializers import (CommentSerializer,
                           CustomUserListSerializer,

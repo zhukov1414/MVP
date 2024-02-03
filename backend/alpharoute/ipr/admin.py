@@ -32,7 +32,14 @@ class CommentAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
+class TemplateAdmin(admin.ModelAdmin):
+
+    list_display = ('id', 'title', 'department')
+    empty_value_display = '-пусто-'
+
+
 admin.site.register(models.IndividualDevelopmentPlan,
                     IndividualDevelopmentPlanAdmin)
 admin.site.register(models.Comment, CommentAdmin)
 admin.site.register(models.Task, TaskAdmin)
+admin.site.register(models.Template, TemplateAdmin)

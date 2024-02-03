@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'api',
     'users',
     'ipr',
-    'templatestask',
+    # 'templatestask',
 ]
 
 MIDDLEWARE = [

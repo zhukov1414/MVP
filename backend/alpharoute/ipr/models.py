@@ -24,6 +24,15 @@ class StatusTask(models.TextChoices):
     DONE = 'done', _('Выполнен')
 
 
+class Department1(models.TextChoices):
+    """Департаменты."""
+
+    ART = 'art', _('Дизайн')
+    QA = 'QA', _('QA')
+    BA = 'BA', _('BA')
+    SA = 'SA', _('SA')
+
+
 class PubDateModel(models.Model):
     """Абстрактная модель для времени."""
 
@@ -110,3 +119,16 @@ class Comment(models.Model):
         super().save(*args, **kwargs)
         self.postdate = datetime.datetime.now()
         super().save(*args, **kwargs)
+
+
+class Template(BaseTaskModel):
+    department = models.CharField('Департамент', max_length=12,
+                                  choices=Department1.choices)
+
+    class Meta:
+        verbose_name = 'Шаблон'
+        verbose_name_plural = 'Шаблоны'
+        ordering = ['department']
+
+    def __str__(self):
+        return str(self.department)

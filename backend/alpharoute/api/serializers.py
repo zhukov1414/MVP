@@ -5,8 +5,8 @@ from rest_framework import serializers
 
 from users.models import CustomUser
 
-from ipr.models import Comment, IndividualDevelopmentPlan, Task
-from templatestask.models import Department, Template
+from ipr.models import Comment, IndividualDevelopmentPlan, Task, Template
+# from templatestask.models import Department, Template
 from datetime import date
 
 
@@ -189,12 +189,12 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
         return False
 
 
-class DepartmentSerializer(serializers.ModelSerializer):
-    """Сериализация направления для шаблона."""
+# class DepartmentSerializer(serializers.ModelSerializer):
+#     """Сериализация направления для шаблона."""
 
-    class Meta:
-        model = Department
-        fields = ('id', 'title')
+#     class Meta:
+#         model = Department
+#         fields = ('id', 'title')
 
 
 class TemplateSerializer(serializers.ModelSerializer):
