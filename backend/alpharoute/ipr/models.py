@@ -36,7 +36,7 @@ class Department1(models.TextChoices):
 class PubDateModel(models.Model):
     """Абстрактная модель для времени."""
 
-    pub_date = models.DateTimeField(
+    pub_date = models.DateField(
         'Дата добавления',
         auto_now_add=True,
         db_index=True)

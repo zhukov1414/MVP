@@ -21,6 +21,6 @@ router_v1.register(r'ipr/(?P<ipr_id>\d+)/tasks/(?P<task_id>\d+)/comment',
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('', include('djoser.urls')),  # Вернула url джосера, потому что при создании пользователя через админку пароль почему-то не шифровался и он не мог потом получить токен. При создании через запрос все ок, все авторизуются. 
+    path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 ]

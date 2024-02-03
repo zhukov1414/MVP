@@ -7,10 +7,8 @@ from djoser.views import UserViewSet
 from users.models import CustomUser
 from ipr.models import (Comment, IndividualDevelopmentPlan,
                         Task, Template)
-# from templatestask.models import Template
 
 from .serializers import (CommentSerializer,
-                          CustomUserListSerializer,
                           CustomUserSerializer,
                           IndividualDevelopmentPlanCreateSerializer,
                           IndividualDevelopmentPlanShortSerializer,
@@ -25,7 +23,7 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = CustomUser.objects.select_related('manager')
     permission_classes = [IsAuthenticated,]
-    serializer_class = CustomUserListSerializer
+    serializer_class = CustomUserSerializer
     http_method_names = ['get',]
 
     @action(
@@ -50,7 +48,7 @@ class CustomUserViewSet(UserViewSet):
         employees = CustomUser.objects.filter(
             manager=self.request.user).all()
         if employees:
-            serializer = CustomUserListSerializer(
+            serializer = CustomUserSerializer(
                 employees, many=True,
                 context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -77,7 +75,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с имеющимися задачами,
     и создания дополнительной в имеющемся ИПР."""
-    # serializer_class = TaskChangeSerializer
     queryset = Task.objects.all()
 
     def get_serializer_class(self):
@@ -129,7 +126,7 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
 
 class MainViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', ]
-    serializer_class = CustomUserListSerializer
+    serializer_class = CustomUserSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff or self.request.user.is_superuser:
