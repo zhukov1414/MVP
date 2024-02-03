@@ -33,7 +33,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'name',
-                  'position', 'photo', 'manager', 'is_staff' )
+                  'position', 'photo', 'manager', 'is_staff')
 
         read_only_fields = ('id',  'first_name',
                             'last_name', 'position', 'photo')
