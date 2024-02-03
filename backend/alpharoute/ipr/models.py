@@ -2,6 +2,7 @@ import datetime
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MaxValueValidator
 
 from users.models import CustomUser
 
@@ -72,6 +73,8 @@ class IndividualDevelopmentPlan(models.Model):
     status = models.CharField('Статус', max_length=12,
                               choices=StatusIpr.choices,
                               default=StatusIpr.CREATED)
+    progress = models.PositiveIntegerField(default=0,
+                                           validators=[MaxValueValidator(100)])
 
     class Meta:
         verbose_name = 'Индивиуальный план развития'

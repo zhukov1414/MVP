@@ -1,0 +1,16 @@
+version: '3'
+
+volumes:
+  static:
+  media:
+
+services:
+  backend:
+    build: .
+    command: gunicorn --bind 0.0.0.0:8000 alpharoute.wsgi:application
+    volumes:
+      - .:/app
+      - static:/static
+      - media:/app/media/images/
+    ports:
+      - "8000:8000"

@@ -11,10 +11,7 @@ DEBUG = True
 
 SQLITE = True
 
-ALLOWED_HOSTS = [
-    'ipr.pythonanywhere.com',
-    'www.ipr.pythonanywhere.com'
-]
+ALLOWED_HOSTS = ['84.201.133.120', 'localhost:8000', 'localhost', '127.0.0.1']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -25,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'drf_yasg',
     'rest_framework',
     'rest_framework.authtoken',
@@ -33,13 +31,14 @@ INSTALLED_APPS = [
     'api',
     'users',
     'ipr',
-    # 'templatestask',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -117,6 +116,7 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = '/media/'
@@ -156,3 +156,9 @@ DJOSER = {
     },
     'HIDE_USERS': False,
 }
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:8000',
+    'http://84.201.133.120:8000',
+]
