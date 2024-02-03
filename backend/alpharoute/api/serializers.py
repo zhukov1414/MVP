@@ -14,25 +14,17 @@ class CustomUserSerializer(UserSerializer):
     """Сериализатор для управления пользователями."""
     photo = Base64ImageField()
     ipr = serializers.SerializerMethodField()
-    full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'full_name',
-                  'is_staff',
+        fields = ('id', 'username', 'name', 'is_staff',
                   'position', 'photo', 'manager', 'ipr', )
-        read_only_fields = ('id',  'first_name',
-                            'last_name', 'position', 'photo')
+        read_only_fields = ('id', 'position', 'photo')
 
     def get_ipr(self, obj):
         ipr = IndividualDevelopmentPlan.objects.filter(
             employee_id=obj).all()
         return IndividualDevelopmentPlanShortSerializer(ipr, many=True).data
-
-    def get_full_name(self, obj):
-        full_name = obj.last_name + ' ' + obj.name + ' ' + obj.first_name
-        return full_name
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -40,8 +32,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'position', 'photo', 'manager', )
+        fields = ('id', 'username', 'name',
+                  'position', 'photo', 'manager', 'is_staff' )
 
         read_only_fields = ('id',  'first_name',
                             'last_name', 'position', 'photo')
@@ -51,16 +43,10 @@ class CustomUserInIprSerializer(serializers.ModelSerializer):
     """Просмотр пользователя из ипр (имя/должность/фото)."""
 
     photo = Base64ImageField()
-    full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('name', 'first_name', 'last_name', 'full_name',
-                  'position', 'photo',)
-
-    def get_full_name(self, obj):
-        full_name = obj.last_name + ' ' + obj.name + ' ' + obj.first_name
-        return full_name
+        fields = ('name', 'position', 'photo',)
 
 
 class TemplateSerializer(serializers.ModelSerializer):
