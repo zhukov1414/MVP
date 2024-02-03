@@ -11,10 +11,12 @@ DEBUG = True
 
 SQLITE = True
 
-ALLOWED_HOSTS = [
-    'ipr.pythonanywhere.com',
-    'www.ipr.pythonanywhere.com'
-]
+# ALLOWED_HOSTS = [
+#     'ipr.pythonanywhere.com',
+#     'www.ipr.pythonanywhere.com'
+# ]
+ALLOWED_HOSTS = []
+
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
