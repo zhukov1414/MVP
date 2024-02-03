@@ -116,7 +116,6 @@ class Comment(models.Model):
         ordering = ['-postdate']
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
         self.postdate = datetime.datetime.now()
         super().save(*args, **kwargs)
 

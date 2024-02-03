@@ -70,9 +70,6 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'content', 'author', 'task', 'postdate',)
         model = Comment
 
-    def create(self, validated_data):
-        return Comment.objects.create(**validated_data)
-
 
 class TaskSerializer(serializers.ModelSerializer):
     """Cериализатор для просмотра задач."""
