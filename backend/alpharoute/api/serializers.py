@@ -1,4 +1,3 @@
-from datetime import date
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 
@@ -6,19 +5,26 @@ from rest_framework import serializers
 
 from users.models import CustomUser
 
-from ipr.models import Comment, IndividualDevelopmentPlan, Task
-from templatestask.models import Department, Template
+from ipr.models import Comment, IndividualDevelopmentPlan, Task, Template
+
+from datetime import date
 
 
 class CustomUserSerializer(UserSerializer):
     """Сериализатор для управления пользователями."""
+    photo = Base64ImageField()
+    ipr = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'position', 'photo')
-        read_only_fields = ('id',  'first_name',
-                            'last_name', 'position', 'photo')
+        fields = ('id', 'username', 'name', 'is_staff',
+                  'position', 'photo', 'manager', 'ipr', )
+        read_only_fields = ('id', 'position', 'photo')
+
+    def get_ipr(self, obj):
+        ipr = IndividualDevelopmentPlan.objects.filter(
+            employee_id=obj).all()
+        return IndividualDevelopmentPlanShortSerializer(ipr, many=True).data
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -26,16 +32,21 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'name', 'password', 'first_name',
-                  'last_name', 'position', 'photo')
+        fields = ('id', 'username', 'name',
+                  'position', 'photo', 'manager', 'is_staff')
+
+        read_only_fields = ('id',  'first_name',
+                            'last_name', 'position', 'photo')
 
 
-class DepartmentSerializer(serializers.ModelSerializer):
-    """Сериализация направления для шаблона."""
+class CustomUserInIprSerializer(serializers.ModelSerializer):
+    """Просмотр пользователя из ипр (имя/должность/фото)."""
+
+    photo = Base64ImageField()
 
     class Meta:
-        model = Department
-        fields = ('id', 'title')
+        model = CustomUser
+        fields = ('name', 'position', 'photo',)
 
 
 class TemplateSerializer(serializers.ModelSerializer):
@@ -44,52 +55,126 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = ('id', 'title', 'description', 'linkURL', 'department')
-        # шаблон привязан к направлению?
-
-
-class CommentUserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = CustomUser
-        fields = ('name', 'last_name')
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField()
+    """Cериализатор для комментариев."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='name',
+    )
+    task = serializers.SlugRelatedField(
+        read_only=True, slug_field='title',
+    )
 
     class Meta:
+        fields = ('id', 'content', 'author', 'task', 'postdate',)
         model = Comment
-        fields = ('id', 'author', 'content', 'postdate')
-
-    def get_author(self, obj):
-        return {'name': obj.author.name, 'last_name': obj.author.last_name}
 
 
 class TaskSerializer(serializers.ModelSerializer):
-
-    has_comments = serializers.SerializerMethodField()
-    comments = CommentSerializer()
+    """Cериализатор для просмотра задач."""
+    ipr = serializers.SlugRelatedField(
+        read_only=True, slug_field='title',
+    )
+    comments = CommentSerializer(many=True, read_only=True)
+    is_commented = serializers.SerializerMethodField()
+    is_out_if_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
-        fields = ('id',
-                  'title',
-                  'deadline',
-                  'description',
-                  'status',
-                  'linkURL',
-                  'has_comments',
-                  'comments',
+        read_only_fields = ('ipr',)
+        fields = ('id', 'title', 'description', 'linkURL',
+                  'ipr', 'deadline', 'status',
+                  'is_commented', 'is_out_if_date', 'comments',
                   )
 
-    def get_has_comments(self, obj):
-        return obj.comments is not None
+    def get_is_commented(self, obj):
+        return Comment.objects.filter(
+            task=obj).exists()
+
+    def get_comments(self, obj):
+        tasks = Task.objects.filter(ipr=obj)
+        return TaskSerializer(tasks, many=True).data
+
+    def get_is_out_if_date(self, obj,):
+        now = date.today()
+        if now > obj.deadline and obj.status != 'done':
+            return True
+        return False
+
+
+class TaskChangeSerializer(serializers.ModelSerializer):
+    """Cериализатор для создания и редактирования задач."""
+
+    class Meta:
+        model = Task
+        fields = ('id', 'title', 'description', 'linkURL',
+                  'deadline', 'status', )
+
+    def create(self, validated_data):
+        return Task.objects.create(**validated_data)
+
+    def update(self, task, validated_data):
+        return super().update(task, validated_data)
 
 
 class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
-    """Сериализатор для просмотра ИПР."""
-    task = TaskSerializer(many=True)
-    is_overdue = serializers.SerializerMethodField()
+    """Сериализатор для просмотра ИПР на странице сотрудника."""
+    task = TaskSerializer(many=True, required=True,)
+    progress = serializers.SerializerMethodField()
+    is_out_if_date = serializers.SerializerMethodField()
+    is_commented = serializers.SerializerMethodField()
+    employee = CustomUserInIprSerializer()
+
+    class Meta:
+        model = IndividualDevelopmentPlan
+        fields = ('employee',
+                  'id',
+                  'title',
+                  'goal',
+                  'description',
+                  'deadline',
+                  'is_out_if_date',
+                  'is_commented',
+                  'progress',
+                  'task',
+                  )
+
+    def get_tasks(self, obj):
+        tasks = Task.objects.filter(ipr=obj)
+        return TaskSerializer(tasks, many=True).data
+
+    def get_progress(self, obj):
+        tasks = Task.objects.filter(ipr=obj).count()
+        done_tasks = Task.objects.filter(ipr=obj, status='done').count()
+        if done_tasks > 0:
+            return int(done_tasks/tasks*100)
+        return 0
+
+    def get_is_out_if_date(self, obj,):
+        now = date.today()
+        bad_status = ('created', 'inwork')
+        tasks = Task.objects.filter(ipr=obj)
+
+        if now > obj.deadline and obj.status in bad_status:
+            return True
+
+        for task in tasks:
+            if now > task.deadline and task.status != 'done':
+                return True
+        return False
+
+    def get_is_commented(self, obj,):
+        tasks = Task.objects.filter(ipr=obj)
+        for task in tasks:
+            if Comment.objects.filter(task=task).exists():
+                return True
+        return False
+
+
+class IndividualDevelopmentPlanCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания и редактирования ИПР (вместе с задачами)."""
+    task = TaskSerializer(many=True, required=True,)
 
     class Meta:
         model = IndividualDevelopmentPlan
@@ -98,87 +183,34 @@ class IndividualDevelopmentPlanShortSerializer(serializers.ModelSerializer):
                   'title',
                   'goal',
                   'description',
-                  'deadline',
-                  'is_overdue',
                   'status',
-                  'task',
+                  'deadline',
+                  'task'
                   )
 
-    def get_is_overdue(self, obj):
-        return obj.deadline < date.today()
+    def validate(self, data):
+        task = self.initial_data.get('task')
+        if not task:
+            raise serializers.ValidationError('Добавьте хотя бы одну задачу')
+        return data
 
-
-class IndividualDevelopmentPlanSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания и обновления ИПР."""
-
-    tasks = TaskSerializer(many=True)
-
-    class Meta:
-        model = IndividualDevelopmentPlan
-        fields = '__all__'
+    def create_tasks(self, tasks, ipr):
+        Task.objects.bulk_create([
+            Task(
+                ipr=ipr, title=task['title'],
+                description=task['description'],
+                linkURL=task['linkURL'],
+                deadline=task['deadline'],
+                status=task['status'])for task in tasks])
 
     def create(self, validated_data):
-        tasks_data = validated_data.pop('tasks', [])
-        individual_development_plan = IndividualDevelopmentPlan.objects.create(**validated_data)  # noqa: E501
+        tasks = validated_data.pop('task')
+        ipr = IndividualDevelopmentPlan.objects.create(**validated_data)
+        self.create_tasks(tasks, ipr)
+        return ipr
 
-        for task_data in tasks_data:
-            Task.objects.create(ipr=individual_development_plan, **task_data)
-
-        return individual_development_plan
-
-
-class CustomUserListSerializer(serializers.ModelSerializer):
-    """Сериализация списка пользователей."""
-
-    photo = Base64ImageField()
-
-    class Meta:
-        model = CustomUser
-        fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'position', 'photo')
-
-        read_only_fields = ('id',  'first_name',
-                            'last_name', 'position', 'photo')
-
-
-class CustomUserWithoutIprSerializer(serializers.ModelSerializer):
-    """Сериализатор для пользователей без ИПР."""
-
-    class Meta:
-        model = CustomUser
-        fields = ('id', 'username', 'name', 'first_name', 'last_name',
-                  'position', 'photo')
-
-    @classmethod
-    def get_users_without_ipr(cls):
-        return cls.Meta.model.objects.filter(ipr_employee__isnull=True)
-
-
-class CustomAlliprListSerializer(serializers.ModelSerializer):
-    """Сериализация списка пользователей с ипр."""
-
-    employee = CustomUserSerializer()
-    task = TaskSerializer(many=True)
-    is_overdue = serializers.SerializerMethodField()
-
-    class Meta:
-        model = IndividualDevelopmentPlan
-        fields = ('id',
-                  'employee',
-                  'title',
-                  'goal',
-                  'progress',
-                  'description',
-                  'deadline',
-                  'is_overdue',
-                  'status',
-                  'task',
-                  )
-
-    def get_is_overdue(self, obj):
-        return obj.deadline < date.today()
-
-
-class CustomUserListResponseSerializer(serializers.Serializer):
-    with_ipr = CustomAlliprListSerializer(many=True)
-    without_ipr = CustomUserWithoutIprSerializer(many=True)
+    def update(self, ipr, validated_data):
+        Task.objects.filter(ipr=ipr).all().delete()
+        tasks = validated_data.pop('task')
+        self.create_tasks(tasks, ipr)
+        return super().update(ipr, validated_data)

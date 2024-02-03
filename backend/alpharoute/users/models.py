@@ -6,7 +6,7 @@ from django.db import models
 class CustomUser(AbstractUser):
     """Модель пользователя."""
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['name', 'position',]
 
     username = models.CharField(
         max_length=150,
@@ -15,11 +15,14 @@ class CustomUser(AbstractUser):
         validators=([RegexValidator(
             regex=r'^(?!me$).*$',
             message='Неподходящий логин. "me" использовать запрещено.')]))
-    name = models.CharField('Имя', max_length=150)
-    first_name = models.CharField('Отчество', max_length=150)
-    last_name = models.CharField('Фамилия', max_length=150)
-    position = models.CharField(max_length=150)
-    password = models.CharField(max_length=150)
+    name = models.CharField('Имя сотрудника', max_length=150)
+    position = models.CharField('Должность', max_length=150)
+    password = models.CharField('Пароль', max_length=150)
+    manager = models.ForeignKey(  # для тех, у кого есть руководитель
+        "CustomUser", on_delete=models.SET_NULL,
+        verbose_name="manager",
+        related_name="employee",
+        blank=True, null=True,)
     photo = models.ImageField('Фото', upload_to='photo',
                               blank=True, null=True,)
 

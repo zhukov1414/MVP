@@ -3,9 +3,6 @@ import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
-from django.db import transaction
 
 from users.models import CustomUser
 
@@ -28,10 +25,19 @@ class StatusTask(models.TextChoices):
     DONE = 'done', _('Выполнен')
 
 
+class Department1(models.TextChoices):
+    """Департаменты."""
+
+    ART = 'art', _('Дизайн')
+    QA = 'QA', _('QA')
+    BA = 'BA', _('BA')
+    SA = 'SA', _('SA')
+
+
 class PubDateModel(models.Model):
     """Абстрактная модель для времени."""
 
-    pub_date = models.DateTimeField(
+    pub_date = models.DateField(
         'Дата добавления',
         auto_now_add=True,
         db_index=True)
@@ -46,9 +52,9 @@ class PubDateModel(models.Model):
 class BaseTaskModel(models.Model):
     """Абстрактная модель для задач и шаблонов."""
 
-    title = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    linkURL = models.CharField(max_length=255,
+    title = models.CharField('Название', max_length=255)
+    description = models.TextField('Описание', null=True, blank=True)
+    linkURL = models.CharField('Ссылка', max_length=255,
                                null=True, blank=True)
 
     class Meta:
@@ -56,14 +62,15 @@ class BaseTaskModel(models.Model):
 
 
 class IndividualDevelopmentPlan(models.Model):
-    title = models.CharField(max_length=255,)
+
+    title = models.CharField('Название', max_length=255,)
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
                                  related_name='ipr_employee',
-                                 verbose_name='сотрудник',)
-    goal = models.CharField(max_length=255)
-    description = models.TextField()
-    deadline = models.DateField()
-    status = models.CharField(max_length=12,
+                                 verbose_name='Сотрудник',)
+    goal = models.CharField('Цель', max_length=255)
+    description = models.TextField('Описание')
+    deadline = models.DateField('Дедлайн')
+    status = models.CharField('Статус', max_length=12,
                               choices=StatusIpr.choices,
                               default=StatusIpr.CREATED)
     progress = models.PositiveIntegerField(default=0,
@@ -73,40 +80,19 @@ class IndividualDevelopmentPlan(models.Model):
         verbose_name = 'Индивиуальный план развития'
         verbose_name_plural = 'Планы развития'
 
-
-class Comment(models.Model):
-    author = models.ForeignKey(CustomUser,
-                               on_delete=models.CASCADE,
-                               related_name='author')
-    content = models.TextField()
-    postdate = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
-        ordering = ['-postdate']
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.postdate = datetime.datetime.now()
-        super().save(*args, **kwargs)
-
     def __str__(self):
-        return self.content
+        return self.title
 
 
 class Task(BaseTaskModel):
     ipr = models.ForeignKey(
         IndividualDevelopmentPlan,
-        on_delete=models.CASCADE, related_name='task')
-    deadline = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=12,
+        on_delete=models.CASCADE, related_name='task',
+        verbose_name='ИПР')
+    deadline = models.DateField('Дедлайн', null=True, blank=True)
+    status = models.CharField('Статус', max_length=12,
                               choices=StatusTask.choices,
                               default=StatusTask.NOCOMLETED)
-    comments = models.ForeignKey(Comment, on_delete=models.CASCADE,
-                                 null=True,
-                                 blank=True,
-                                 related_name='tasks_comments')
 
     class Meta:
         verbose_name = 'Задача'
@@ -116,29 +102,35 @@ class Task(BaseTaskModel):
         return self.title
 
 
-@receiver(pre_save, sender=IndividualDevelopmentPlan)
-def update_progress(sender, instance, **kwargs):
-    with transaction.atomic():
-        total_tasks = instance.task.count()
-        completed_tasks = instance.task.filter(status=StatusTask.DONE).count()
+class Comment(models.Model):
+    author = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Автор')
+    task = models.ForeignKey(
+        Task, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Задача')
+    content = models.TextField('Текст комментария')
+    postdate = models.DateTimeField('Дата создания',
+                                    auto_now_add=True, db_index=True)
 
-        if total_tasks > 0:
-            instance.progress = (completed_tasks / total_tasks) * 100
-        else:
-            instance.progress = 0
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['-postdate']
+
+    def save(self, *args, **kwargs):
+        self.postdate = datetime.datetime.now()
+        super().save(*args, **kwargs)
 
 
-@receiver(pre_save, sender=Task)
-def update_ipr_status(sender, instance, **kwargs):
-    with transaction.atomic():
-        if instance.ipr:
-            task_status = instance.status
+class Template(BaseTaskModel):
+    department = models.CharField('Департамент', max_length=12,
+                                  choices=Department1.choices)
 
-            if task_status == StatusTask.INWORK:
-                instance.ipr.status = StatusIpr.INWORK
-            elif task_status == StatusTask.DONE:
-                instance.ipr.status = StatusIpr.DONE
-            else:
-                instance.ipr.status = StatusIpr.CREATED
+    class Meta:
+        verbose_name = 'Шаблон'
+        verbose_name_plural = 'Шаблоны'
+        ordering = ['department']
 
-            instance.ipr.save()
+    def __str__(self):
+        return str(self.department)
