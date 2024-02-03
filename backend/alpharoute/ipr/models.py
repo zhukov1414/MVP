@@ -42,9 +42,9 @@ class PubDateModel(models.Model):
 class BaseTaskModel(models.Model):
     """Абстрактная модель для задач и шаблонов."""
 
-    title = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    linkURL = models.CharField(max_length=255,
+    title = models.CharField('Название', max_length=255)
+    description = models.TextField('Описание', null=True, blank=True)
+    linkURL = models.CharField('Ссылка', max_length=255,
                                null=True, blank=True)
 
     class Meta:
@@ -53,14 +53,14 @@ class BaseTaskModel(models.Model):
 
 class IndividualDevelopmentPlan(models.Model):
 
-    title = models.CharField(max_length=255,)
+    title = models.CharField('Название', max_length=255,)
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
                                  related_name='ipr_employee',
-                                 verbose_name='сотрудник',)
-    goal = models.CharField(max_length=255)
-    description = models.TextField()
-    deadline = models.DateField()
-    status = models.CharField(max_length=12,
+                                 verbose_name='Сотрудник',)
+    goal = models.CharField('Цель', max_length=255)
+    description = models.TextField('Описание')
+    deadline = models.DateField('Дедлайн')
+    status = models.CharField('Статус', max_length=12,
                               choices=StatusIpr.choices,
                               default=StatusIpr.CREATED)
 
@@ -75,9 +75,10 @@ class IndividualDevelopmentPlan(models.Model):
 class Task(BaseTaskModel):
     ipr = models.ForeignKey(
         IndividualDevelopmentPlan,
-        on_delete=models.CASCADE, related_name='task')
-    deadline = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=12,
+        on_delete=models.CASCADE, related_name='task',
+        verbose_name='ИПР')
+    deadline = models.DateField('Дедлайн', null=True, blank=True)
+    status = models.CharField('Статус', max_length=12,
                               choices=StatusTask.choices,
                               default=StatusTask.NOCOMLETED)
 
@@ -91,11 +92,14 @@ class Task(BaseTaskModel):
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name='comments')
+        CustomUser, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Автор')
     task = models.ForeignKey(
-        Task, on_delete=models.CASCADE, related_name='comments')
-    content = models.TextField()
-    postdate = models.DateTimeField(auto_now_add=True, db_index=True)
+        Task, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Задача')
+    content = models.TextField('Текст комментария')
+    postdate = models.DateTimeField('Дата создания',
+                                    auto_now_add=True, db_index=True)
 
     class Meta:
         verbose_name = 'Комментарий'

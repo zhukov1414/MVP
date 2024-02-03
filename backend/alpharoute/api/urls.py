@@ -5,11 +5,13 @@ from .views import (CustomUserViewSet,
                     IndividualDevelopmentPlanViewSet,
                     TaskViewSet,
                     CommentViewSet,
-                    TemplateViewSet)
+                    TemplateViewSet,
+                    MainViewSet)
 
 app_name = 'api'
 router_v1 = DefaultRouter()
 
+router_v1.register('main', MainViewSet, basename='main')
 router_v1.register('employee', CustomUserViewSet, basename='employee')
 router_v1.register('templates', TemplateViewSet, basename='templates')
 router_v1.register('ipr', IndividualDevelopmentPlanViewSet, basename='ipr')
@@ -19,5 +21,6 @@ router_v1.register(r'ipr/(?P<ipr_id>\d+)/tasks/(?P<task_id>\d+)/comment',
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
+    path('', include('djoser.urls')),  # Вернула url джосера, потому что при создании пользователя через админку пароль почему-то не шифровался и он не мог потом получить токен. При создании через запрос все ок, все авторизуются. 
     path('auth/', include('djoser.urls.authtoken')),
 ]

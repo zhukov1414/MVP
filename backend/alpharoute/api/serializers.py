@@ -127,7 +127,7 @@ class TaskInIprSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         read_only_fields = ('ipr',)
-        fields = ('title', 'description', 'status',
+        fields = ('id', 'title', 'description', 'status',
                   'deadline', 'is_commented')
 
     def get_is_commented(self, obj):

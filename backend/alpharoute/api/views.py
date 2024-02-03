@@ -20,7 +20,7 @@ from .serializers import (CommentSerializer,
 
 
 class CustomUserViewSet(UserViewSet):
-    """Сериализатор позволяет просматривать список всех пользователей,
+    """Позволяет просматривать список всех пользователей,
     отдельного пользователя и список релевантных пользователей."""
 
     queryset = CustomUser.objects.select_related('manager')
@@ -125,3 +125,13 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response('Комментариев пока нет',
                         status=status.HTTP_400_BAD_REQUEST)
+
+
+class MainViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', ]
+    serializer_class = CustomUserListSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return CustomUser.objects.all()
+        return CustomUser.objects.filter(id=self.request.user.id)
