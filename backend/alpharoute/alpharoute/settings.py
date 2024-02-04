@@ -65,6 +65,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'alpharoute.wsgi.application'
 
+SQLITE = False
 
 DATABASES_POSTGRES = {
     'default': {
@@ -88,6 +89,7 @@ if SQLITE:
     DATABASES = DATABASES_SQLITE
 else:
     DATABASES = DATABASES_POSTGRES
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
