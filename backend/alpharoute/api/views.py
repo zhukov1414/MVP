@@ -1,28 +1,32 @@
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from djoser.views import UserViewSet
-from users.models import CustomUser
-from ipr.models import (Comment, IndividualDevelopmentPlan,
-                        Task, Template)
 
-from .serializers import (CommentSerializer,
-                          CustomUserSerializer,
+from ipr.models import Comment, IndividualDevelopmentPlan, Task, Template
+from users.models import CustomUser
+
+from .serializers import (CommentSerializer, CustomUserSerializer,
                           IndividualDevelopmentPlanCreateSerializer,
                           IndividualDevelopmentPlanShortSerializer,
-                          TaskChangeSerializer,
-                          TaskSerializer,
+                          TaskChangeSerializer, TaskSerializer,
                           TemplateSerializer)
 
 
 class CustomUserViewSet(UserViewSet):
     """Позволяет просматривать список всех пользователей,
-    отдельного пользователя и список релевантных пользователей."""
+    отдельного пользователя и список релевантных пользователей.
+    Возможность регистрации в MVP не предусмотрена."""
 
     queryset = CustomUser.objects.select_related('manager')
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, ]
+    filter_backends = (SearchFilter, OrderingFilter)
+    search_fields = ('^name', '^position')
+    ordering_fields = ('name', 'id', 'position')
     serializer_class = CustomUserSerializer
     http_method_names = ['get',]
 
@@ -30,7 +34,7 @@ class CustomUserViewSet(UserViewSet):
         detail=False,
         methods=['get'],
         url_path='me',
-        permission_classes=[IsAuthenticated])
+        permission_classes=[IsAuthenticated,])
     def profile(self, request):
         """Просмотр информации о себе."""
         serializer = CustomUserSerializer(
@@ -41,10 +45,10 @@ class CustomUserViewSet(UserViewSet):
         detail=False,
         methods=['get'],
         url_path='my_employee',
-        permission_classes=[IsAuthenticated])
+        permission_classes=[IsAuthenticated,])
     def get_employee_list(self, request,):
-        """Посмотреть список своих подчиненных с их ипр
-        (без лишних полей)."""
+        """Посмотреть список своих подчиненных с
+        полной информацией об их ипр."""
         employees = CustomUser.objects.filter(
             manager=self.request.user).all()
         if employees:
@@ -57,14 +61,22 @@ class CustomUserViewSet(UserViewSet):
 
 
 class TemplateViewSet(viewsets.ModelViewSet):
+    """Шаблоны задач. """
     http_method_names = ['get', 'post',]
     queryset = Template.objects.all()
+    filter_backends = (SearchFilter,  DjangoFilterBackend,
+                       OrderingFilter)
+    search_fields = ('^title', '^description')
+    ordering_fields = ('id', 'department', 'title')
     serializer_class = TemplateSerializer
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Комментарии к задачам."""
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
+    filter_backends = (OrderingFilter, DjangoFilterBackend,)
+    ordering_fields = ('id', 'task', 'postdate')
     http_method_names = ['get', 'post',]
 
     def perform_create(self, serializer):
@@ -75,7 +87,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с имеющимися задачами,
     и создания дополнительной в имеющемся ИПР."""
-    queryset = Task.objects.all()
+    queryset = Task.objects.select_related('ipr')
+    filter_backends = (OrderingFilter, DjangoFilterBackend,)
+    ordering_fields = ('id', 'status')
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -94,6 +108,14 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
     queryset = IndividualDevelopmentPlan.objects.all()
     permission_classes = (AllowAny,)
     methods = ['get', 'post', 'patch', 'delete'],
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('^employee_name', '^title')
+    ordering_fields = (
+        'employee_name',
+        'title',
+        "status",
+        'deadline',
+    )
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -111,8 +133,7 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
         methods=['get'],
         permission_classes=[IsAuthenticated])
     def get_all_comments(self, request, pk=id):
-        """Посмотреть все комментарии, привязанные к
-        конкретному ипр."""
+        """Отдельно получить список комментариев к ИПР."""
         comments = Comment.objects.filter(
             task__ipr__id=pk)
         if comments:
@@ -125,6 +146,8 @@ class IndividualDevelopmentPlanViewSet(viewsets.ModelViewSet):
 
 
 class MainViewSet(viewsets.ModelViewSet):
+    """Главная страница. Руководитель увидит список сотрудников,
+    а линейный сотрудник -свою страницу."""
     http_method_names = ['get', ]
     serializer_class = CustomUserSerializer
 

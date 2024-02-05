@@ -2,7 +2,6 @@ import datetime
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import MaxValueValidator
 
 from users.models import CustomUser
 
@@ -62,6 +61,7 @@ class BaseTaskModel(models.Model):
 
 
 class IndividualDevelopmentPlan(models.Model):
+    """Планы развития сотрудников."""
 
     title = models.CharField('Название', max_length=255,)
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
@@ -73,8 +73,6 @@ class IndividualDevelopmentPlan(models.Model):
     status = models.CharField('Статус', max_length=12,
                               choices=StatusIpr.choices,
                               default=StatusIpr.CREATED)
-    progress = models.PositiveIntegerField(default=0,
-                                           validators=[MaxValueValidator(100)])
 
     class Meta:
         verbose_name = 'Индивиуальный план развития'
@@ -85,6 +83,7 @@ class IndividualDevelopmentPlan(models.Model):
 
 
 class Task(BaseTaskModel):
+    """Задачи для ИПР."""
     ipr = models.ForeignKey(
         IndividualDevelopmentPlan,
         on_delete=models.CASCADE, related_name='task',
@@ -103,6 +102,7 @@ class Task(BaseTaskModel):
 
 
 class Comment(models.Model):
+    """Комментарии к задачам из ИПР."""
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name='comments',
         verbose_name='Автор')
@@ -124,6 +124,7 @@ class Comment(models.Model):
 
 
 class Template(BaseTaskModel):
+    """Шаблоны задач."""
     department = models.CharField('Департамент', max_length=12,
                                   choices=Department1.choices)
 

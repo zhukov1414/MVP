@@ -1,13 +1,11 @@
+from datetime import date
+
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-
 from rest_framework import serializers
 
-from users.models import CustomUser
-
 from ipr.models import Comment, IndividualDevelopmentPlan, Task, Template
-
-from datetime import date
+from users.models import CustomUser
 
 
 class CustomUserSerializer(UserSerializer):

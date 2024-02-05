@@ -1,15 +1,18 @@
 import os
 from pathlib import Path
 
-# from dotenv import load_dotenv
+from django.core.management import utils
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-m^&4oe!jkzo4yy$@)r)4ac6otd$#55$-#q02%fgou%q2t5&i5n'
+SECRET_KEY = os.getenv('SECRET_KEY', default=utils.get_random_secret_key())
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG') == 'True'
 
-SQLITE = True
+SQLITE = False
 
 ALLOWED_HOSTS = ['84.201.133.120', 'localhost:8000', 'localhost', '127.0.0.1']
 
@@ -65,6 +68,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'alpharoute.wsgi.application'
 
+SQLITE = False
 
 DATABASES_POSTGRES = {
     'default': {
@@ -88,6 +92,7 @@ if SQLITE:
     DATABASES = DATABASES_SQLITE
 else:
     DATABASES = DATABASES_POSTGRES
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
