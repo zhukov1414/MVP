@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', default=utils.get_random_secret_key())
 
 DEBUG = os.environ.get('DEBUG') == 'True'
 
-SQLITE = False
+SQLITE = True
 
 ALLOWED_HOSTS = ['84.201.133.120', 'localhost:8000', 'localhost', '127.0.0.1']
 
@@ -68,6 +68,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'alpharoute.wsgi.application'
 
+SQLITE = False
 
 DATABASES_POSTGRES = {
     'default': {
@@ -91,6 +92,7 @@ if SQLITE:
     DATABASES = DATABASES_SQLITE
 else:
     DATABASES = DATABASES_POSTGRES
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
