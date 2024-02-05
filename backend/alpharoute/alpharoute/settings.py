@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', default=utils.get_random_secret_key())
 
 DEBUG = os.environ.get('DEBUG') == 'True'
 
-SQLITE = True
+SQLITE = False
 
 ALLOWED_HOSTS = ['84.201.133.120', 'localhost:8000', 'localhost', '127.0.0.1']
 
